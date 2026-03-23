@@ -34,3 +34,5 @@ coverage/
 
 **/screenshots/*
 **/audio/*
+**/video-work/*
+*.mp4
