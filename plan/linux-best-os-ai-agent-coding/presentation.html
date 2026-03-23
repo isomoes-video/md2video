@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>为什么 Linux 是严肃 AI Agent 编程的最佳操作系统</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section id="title" class="section-divider hero-slide" data-state="is-section-divider">
+        <p class="eyebrow">AI AGENT CODING / OS CHOICE</p>
+        <h1>为什么 Linux 是严肃 AI Agent 编程的最佳操作系统</h1>
+        <p class="hero-kicker text-xl">不是因为桌面更漂亮，而是因为它更适合 agent 被安全、可脚本化地约束与编排。</p>
+        <p class="hero-meta">安全边界 / CLI 优先生态 / 开放可定制</p>
+      </section>
+
+      <section id="divider-standards" class="section-divider chapter-divider" data-state="is-section-divider">
+        <p class="eyebrow">PART 01</p>
+        <h1>Agent 时代，评判标准变了</h1>
+        <p>从 human-friendly desktop，转向 agent-friendly execution surface</p>
+      </section>
+
+      <section id="shift-in-criteria">
+        <h2>问题不再是“哪个桌面更顺手”</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px; align-items: stretch;">
+            <div class="panel panel-soft">
+              <p class="panel-label">传统桌面时代</p>
+              <ul>
+                <li>比拼桌面精致度、应用生态、驱动和默认体验</li>
+                <li>默认操作者是持续在线的人类</li>
+                <li>核心问题是点击效率与视觉便利</li>
+              </ul>
+            </div>
+            <div class="panel panel-strong">
+              <p class="panel-label">Agent coding 时代</p>
+              <ul>
+                <li>比拼权限边界、工具可组合性、自动化质量</li>
+                <li>默认操作者是被监督的 AI agent</li>
+                <li>核心问题是能否安全执行长动作链路</li>
+              </ul>
+            </div>
+          </div>
+          <div class="quote-panel">
+            <p class="text-2xl">真正重要的问题变成：<strong>哪个系统更适合 agent 安全、稳定、可推理地工作？</strong></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="three-requirements">
+        <h2>严肃的 Agent 编程，至少要有三件事</h2>
+        <div class="content">
+          <div class="triad-grid">
+            <div class="pillar-card">
+              <p class="pillar-icon"><i class="fa-solid fa-shield-halved"></i></p>
+              <h3>清晰安全边界</h3>
+              <p>知道 agent 能碰什么、不能碰什么，以及什么时候必须提升权限。</p>
+            </div>
+            <div class="pillar-card">
+              <p class="pillar-icon"><i class="fa-solid fa-terminal"></i></p>
+              <h3>CLI-first 环境</h3>
+              <p>工具暴露明确文本接口，输出可读、可组合、可脚本化。</p>
+            </div>
+            <div class="pillar-card">
+              <p class="pillar-icon"><i class="fa-solid fa-screwdriver-wrench"></i></p>
+              <h3>开放与可定制</h3>
+              <p>当工作流变化时，系统能快速长出新的 wrapper、隔离层和审查层。</p>
+            </div>
+          </div>
+          <div class="signal-strip">
+            <p><strong>Linux 的优势不在某个单点功能，</strong>而在这三件事会互相强化。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="divider-pillars" class="section-divider chapter-divider" data-state="is-section-divider">
+        <p class="eyebrow">PART 02</p>
+        <h1>Linux 的三重优势</h1>
+        <p>安全边界、CLI 生态、开放演化</p>
+      </section>
+
+      <section>
+        <section id="security-boundary">
+          <h2>1. 它更容易给 Agent 划出可执行边界</h2>
+          <div class="content">
+            <div style="display: grid; grid-template-columns: 1.2fr 0.9fr; gap: 28px; align-items: stretch;">
+              <div class="panel panel-soft">
+                <ul>
+                  <li>Unix 风格权限模型把访问范围拆成 user / group / other</li>
+                  <li>非 root、目录作用域、服务账号这些概念都很自然</li>
+                  <li>worktree、容器、namespace、cgroup 更容易组合成隔离层</li>
+                </ul>
+              </div>
+              <div class="stacked-steps">
+                <div class="step-card"><p class="step-title">01 非特权用户</p><p>先默认最小权限运行</p></div>
+                <div class="step-card"><p class="step-title">02 仓库 / 工作区</p><p>把可写范围缩到明确目录</p></div>
+                <div class="step-card"><p class="step-title">03 容器 / worktree</p><p>进一步限制进程与依赖影响面</p></div>
+                <div class="step-card caution"><p class="step-title">04 必要时再提权</p><p>把高风险动作从默认路径里拿掉</p></div>
+              </div>
+            </div>
+            <p class="footnote">参考：Linux 文件权限、namespaces、容器边界 [1][2][6]</p>
+          </div>
+        </section>
+
+        <section id="cli-ecosystem">
+          <h2>2. 它拥有最自然的 CLI-first 软件生态</h2>
+          <div class="content">
+            <div style="display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 28px; align-items: stretch;">
+              <div class="panel panel-dark">
+                <p class="panel-label">Agent 喜欢的接口形态</p>
+                <div class="chip-cloud">
+                  <p class="chip">git</p>
+                  <p class="chip">rg</p>
+                  <p class="chip">jq</p>
+                  <p class="chip">tmux</p>
+                  <p class="chip">docker</p>
+                  <p class="chip">pytest</p>
+                </div>
+              </div>
+              <div class="panel panel-soft">
+                <ul>
+                  <li>文本接口比 GUI 更适合被脚本、记录和复现</li>
+                  <li>工具之间可以被管道和 shell 直接编排</li>
+                  <li>很多 GUI 包装层对 agent 来说只是额外翻译成本</li>
+                  <li>CLI wrapper 甚至正在成为把 UI-heavy 软件 agent 化的新趋势</li>
+                </ul>
+              </div>
+            </div>
+            <div class="signal-strip alt">
+              <p>对人类来说 UI 仍然重要；但对 agent 来说，<strong>一等公民的终端生态更关键。</strong></p>
+            </div>
+          </div>
+        </section>
+
+        <section id="open-customizable">
+          <h2>3. 它更开放，所以工作流能演化得更快</h2>
+          <div class="content">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; align-items: stretch;">
+              <div class="mini-card">
+                <p class="mini-kicker">OPEN STACK</p>
+                <p>开源工具链和可替换组件足够多</p>
+              </div>
+              <div class="mini-card">
+                <p class="mini-kicker">NEW WRAPPERS</p>
+                <p>可以快速包出 daemon、脚本、adapter、review UI</p>
+              </div>
+              <div class="mini-card">
+                <p class="mini-kicker">REPRODUCIBLE ENV</p>
+                <p>环境能被声明、复用、分享、隔离</p>
+              </div>
+              <div class="mini-card accent-card">
+                <p class="mini-kicker">RESULT</p>
+                <p>工作流还在发明阶段，Linux 给实验留下更大空间</p>
+              </div>
+            </div>
+            <blockquote>
+              <p>在 agent 时代，优势不只是“能不能用”，而是“新抽象能不能很快长出来”。</p>
+            </blockquote>
+          </div>
+        </section>
+      </section>
+
+      <section id="divider-conclusion" class="section-divider chapter-divider" data-state="is-section-divider">
+        <p class="eyebrow">PART 03</p>
+        <h1>边界与结论</h1>
+        <p>为什么这比桌面精致度更重要，以及结论适用范围</p>
+      </section>
+
+      <section id="new-scorecard">
+        <h2>最佳操作系统的评分表，已经换了</h2>
+        <div class="content">
+          <div class="score-grid">
+            <div class="score-card">
+              <p class="score-value">A</p>
+              <p class="score-label">权限清晰度</p>
+            </div>
+            <div class="score-card">
+              <p class="score-value">A</p>
+              <p class="score-label">可脚本化程度</p>
+            </div>
+            <div class="score-card">
+              <p class="score-value">A</p>
+              <p class="score-label">工具可组合性</p>
+            </div>
+            <div class="score-card accent-card">
+              <p class="score-value">A</p>
+              <p class="score-label">工作流可演化性</p>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 28px; align-items: stretch; margin-top: 24px;">
+            <div class="panel panel-soft">
+              <p class="panel-label">Human-first 指标</p>
+              <p>桌面 polish、默认 app、图形交互舒适度</p>
+            </div>
+            <div class="panel panel-strong">
+              <p class="panel-label">Agent-first 指标</p>
+              <p>权限粒度、可验证执行、脚本化工具链、隔离与复现能力</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scope-and-final">
+        <h2>结论很强，但结论也有边界</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: stretch;">
+            <div class="panel panel-soft">
+              <p class="panel-label">这篇文章没有说</p>
+              <ul>
+                <li>Linux 自动适合所有用户、团队或计算场景</li>
+                <li>商业桌面软件、游戏、办公体验不再重要</li>
+                <li>Linux 完美无缺，迁移没有成本</li>
+              </ul>
+            </div>
+            <div class="panel panel-strong conclusion-panel">
+              <p class="panel-label">这篇文章真正说的是</p>
+              <p class="text-xl"><strong>如果你的日常工作越来越依赖 agent 读仓库、调工具、跑测试、在隔离环境里执行任务，Linux 目前最贴合这种工作方式。</strong></p>
+            </div>
+          </div>
+          <div class="conclusion-band">
+            <p class="text-2xl">Linux 在这里胜出，不是因为信仰，<strong>而是因为工作流已经变了。</strong></p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js-plugins@latest/chart/plugin.js"></script>
+  <script>
+    Reveal.initialize({
+      width: 1280,
+      height: 720,
+      margin: 0,
+      controls: true,
+      progress: true,
+      slideNumber: true,
+      hash: true,
+      transition: 'slide',
+      center: false,
+      plugins: [RevealChart],
+      chart: {
+        defaults: Object.assign({
+          color: 'rgba(35, 46, 41, 0.85)',
+          borderColor: 'rgba(35, 46, 41, 0.85)',
+          devicePixelRatio: 2
+        }, window.location.search.includes('export') ? { animation: false } : {})
+      }
+    });
+  </script>
+</body>
+</html>
