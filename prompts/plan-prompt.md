@@ -7,7 +7,7 @@ You are preparing source content for reveal.js presentation and narration produc
 - Accept any input file type, not only `*.md`.
 - Use the provided file content directly as source context.
 - Plan a reveal.js presentation.
-- Write all generated output under `plan/`.
+- Write all generated output under `output/`.
 - Produce a presentation HTML file and CSS theme suitable for direct browser viewing with no build step.
 - Produce `script.json` with one narration entry per slide.
 - Produce a PDF export where each slide is rendered as its own PDF page.
@@ -20,15 +20,15 @@ You are preparing source content for reveal.js presentation and narration produc
 
 ## Output contract
 
-- Output directory: create a dedicated subdirectory under `plan/` for the presentation, for example `plan/<presentation-slug>/`.
-- `plan/<presentation-slug>/presentation.html`: valid reveal.js presentation HTML.
-- `plan/<presentation-slug>/styles.css`: custom presentation theme CSS.
-- `plan/<presentation-slug>/script.json`: array of objects with only `slide_number` and `narration`.
-- `plan/<presentation-slug>/output.pdf`: exported PDF with one slide per page.
+- Output directory: create a dedicated subdirectory under `output/` for the presentation, for example `output/<presentation-slug>/`.
+- `output/<presentation-slug>/presentation.html`: valid reveal.js presentation HTML.
+- `output/<presentation-slug>/styles.css`: custom presentation theme CSS.
+- `output/<presentation-slug>/script.json`: array of objects with only `slide_number` and `narration`.
+- `output/<presentation-slug>/output.pdf`: exported PDF with one slide per page.
 
 ## Export requirements
 
 - Export the final deck to PDF after slide review.
 - The PDF must preserve slide pagination so each reveal.js slide becomes a single PDF page.
 - If screenshots or preview assets are generated during review, keep them separate from the final PDF deliverable.
-- Any review artifacts should also stay inside the same `plan/<presentation-slug>/` workspace, such as `plan/<presentation-slug>/screenshots/`.
+- Any review artifacts should also stay inside the same `output/<presentation-slug>/` workspace, such as `output/<presentation-slug>/screenshots/`.

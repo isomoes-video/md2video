@@ -4,10 +4,10 @@ You are generating narration audio from approved script content.
 
 ## Goals
 
-- Read `plan/<presentation-slug>/script.json`.
+- Read `output/<presentation-slug>/script.json`.
 - Use DashScope TTS with `DASHSCOPE_API_KEY`.
 - Create a uv-runnable Python script that converts each narration entry into audio.
-- Generate one mp3 per slide into `plan/<presentation-slug>/audio/`.
+- Generate one mp3 per slide into `output/<presentation-slug>/audio/`.
 - Keep file names aligned with slide numbers.
 
 ## Input contract
@@ -17,7 +17,7 @@ You are generating narration audio from approved script content.
 
 ## Output contract
 
-- Output directory: `plan/<presentation-slug>/audio/`.
+- Output directory: `output/<presentation-slug>/audio/`.
 - One audio file per slide, for example `slide-01.mp3`, `slide-02.mp3`.
 - Preserve the original narration text exactly unless a TTS API requires escaping.
 

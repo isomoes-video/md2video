@@ -4,7 +4,7 @@ You are assembling the final narrated video.
 
 ## Goals
 
-- Read `plan/<presentation-slug>/output.pdf` and `plan/<presentation-slug>/audio/`.
+- Read `output/<presentation-slug>/output.pdf` and `output/<presentation-slug>/audio/`.
 - Treat each PDF page as one slide visual and each matching mp3 as that slide narration.
 - Derive each slide's on-screen duration from the actual audio length.
 - Build a video where each slide image stays visible for the full duration of its narration audio.
@@ -19,9 +19,9 @@ You are assembling the final narrated video.
 
 ## Output contract
 
-- Output directory: write results inside the same `plan/<presentation-slug>/` workspace.
-- Final artifact: `plan/<presentation-slug>/video.mp4`.
-- Intermediate render assets, if needed, should stay under a subdirectory such as `plan/<presentation-slug>/video-work/`.
+- Output directory: write results inside the same `output/<presentation-slug>/` workspace.
+- Final artifact: `output/<presentation-slug>/video.mp4`.
+- Intermediate render assets, if needed, should stay under a subdirectory such as `output/<presentation-slug>/video-work/`.
 
 ## Implementation requirements
 
