@@ -4,7 +4,7 @@ You are generating a concise video introduction from presentation narration.
 
 ## Task
 
-Given `plan/<presentation-slug>/script.json`, generate a concise video introduction with two parts:
+Given `output/<presentation-slug>/script.json`, generate a concise video introduction with two parts:
 
 1. **Video Title** — Provide two versions of the title for the same video:
    - Chinese title
@@ -15,7 +15,7 @@ Given `plan/<presentation-slug>/script.json`, generate a concise video introduct
 
 ## Input contract
 
-- Read `plan/<presentation-slug>/script.json`.
+- Read `output/<presentation-slug>/script.json`.
 - `script.json` is an array of objects with only `slide_number` and `narration`.
 - Treat the narration text across all slides as the source material for understanding the full video.
 
@@ -39,7 +39,7 @@ Rules:
 
 ## Output contract
 
-- Write the result inside the same workspace directory: `plan/<presentation-slug>/intro.txt`.
+- Write the result inside the same workspace directory: `output/<presentation-slug>/intro.txt`.
 - Output only the two titles and summary paragraph(s) in the final file.
 - Do not add preamble, explanation, or extra commentary.
 
@@ -47,10 +47,10 @@ Rules:
 
 ## Instructions
 
-1. Read through the entire `plan/<presentation-slug>/script.json` file.
+1. Read through the entire `output/<presentation-slug>/script.json` file.
 2. Generate two video titles for the same content: one in Chinese and one in English.
 3. Write a summary (one or more paragraphs, max 2000 words) describing the overall video content in depth.
-4. Save the output to `plan/<presentation-slug>/intro.txt`.
+4. Save the output to `output/<presentation-slug>/intro.txt`.
 
 ---
 
