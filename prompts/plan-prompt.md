@@ -1,10 +1,11 @@
 # md2video plan prompt
 
-You are preparing a markdown blog for reveal.js presentation and narration production.
+You are preparing source content for reveal.js presentation and narration production.
 
 ## Goals
 
-- Read `*.md`.
+- Accept any input file type, not only `*.md`.
+- Use the provided file content directly as source context.
 - Plan a reveal.js presentation.
 - Write all generated output under `plan/`.
 - Produce a presentation HTML file and CSS theme suitable for direct browser viewing with no build step.
