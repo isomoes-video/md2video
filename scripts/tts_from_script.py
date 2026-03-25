@@ -14,9 +14,9 @@ from pathlib import Path
 from typing import Any, Callable
 
 
-DEFAULT_MODEL = "cosyvoice-v3.5-flash"
-DEFAULT_VOICE = "longanxuan_v3"
-DEFAULT_SCRIPT = Path("plan/linux-best-os-ai-agent-coding/script.json")
+DEFAULT_MODEL = "cosyvoice-v3-flash"
+DEFAULT_VOICE = "longanyang"
+DEFAULT_SCRIPT = Path("output/tools-keyboard-first-workflow/script.json")
 DEFAULT_BASE_WEBSOCKET_API_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
 
 
@@ -36,14 +36,14 @@ def load_script_entries(script_path: Path) -> list[dict[str, Any]]:
             raise ValueError(
                 f"Entry {index} in {script_path} is missing integer slide_number"
             )
-        if not isinstance(narration, str) or not narration.strip():
+        if not isinstance(narration, str) or not narration:
             raise ValueError(
                 f"Entry {index} in {script_path} is missing narration text"
             )
 
-        entries.append({"slide_number": slide_number, "narration": narration.strip()})
+        entries.append({"slide_number": slide_number, "narration": narration})
 
-    return entries
+    return sorted(entries, key=lambda entry: entry["slide_number"])
 
 
 def resolve_output_dir(script_path: Path, output_dir: Path | None) -> Path:
