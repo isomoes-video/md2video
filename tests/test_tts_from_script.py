@@ -64,15 +64,17 @@ class OutputPathTests(unittest.TestCase):
 
 
 class ParseArgsTests(unittest.TestCase):
-    def test_uses_expected_default_voice(self) -> None:
+    def test_uses_expected_defaults(self) -> None:
         module = load_module()
 
         args = module.parse_args(["--voice", "override-voice"])
 
         self.assertEqual(
-            module.DEFAULT_VOICE,
-            "qwen-tts-vd-bailian-voice-20260323160336093-f9d8",
+            module.DEFAULT_SCRIPT,
+            Path("output/tools-keyboard-first-workflow/script.json"),
         )
+        self.assertEqual(module.DEFAULT_MODEL, "cosyvoice-v3-flash")
+        self.assertEqual(module.DEFAULT_VOICE, "longanyang")
         self.assertEqual(args.voice, "override-voice")
 
 
@@ -81,15 +83,9 @@ class SynthesizeEntriesTests(unittest.TestCase):
         module = load_module()
         seen_text = []
 
-        def fake_synthesizer(text: str) -> str:
+        def fake_synthesizer(text: str) -> bytes:
             seen_text.append(text)
-            return f"https://example.com/{len(seen_text)}.mp3"
-
-        downloads = []
-
-        def fake_downloader(url: str, destination: Path) -> None:
-            downloads.append((url, destination))
-            destination.write_bytes(f"downloaded:{url}".encode("utf-8"))
+            return f"audio:{len(seen_text)}".encode("utf-8")
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             output_dir = Path(tmp_dir) / "audio"
@@ -100,18 +96,10 @@ class SynthesizeEntriesTests(unittest.TestCase):
                 ],
                 output_dir=output_dir,
                 synthesize=fake_synthesizer,
-                download_audio=fake_downloader,
                 overwrite=False,
             )
 
             self.assertEqual(seen_text, ["first", "second"])
-            self.assertEqual(
-                downloads,
-                [
-                    ("https://example.com/1.mp3", output_dir / "slide-01.mp3"),
-                    ("https://example.com/2.mp3", output_dir / "slide-11.mp3"),
-                ],
-            )
             self.assertEqual(
                 manifest,
                 [
@@ -119,15 +107,14 @@ class SynthesizeEntriesTests(unittest.TestCase):
                     output_dir / "slide-11.mp3",
                 ],
             )
+            self.assertEqual((output_dir / "slide-01.mp3").read_bytes(), b"audio:1")
+            self.assertEqual((output_dir / "slide-11.mp3").read_bytes(), b"audio:2")
 
     def test_skips_existing_files_without_overwrite(self) -> None:
         module = load_module()
 
-        def fail_synthesizer(text: str) -> str:
+        def fail_synthesizer(text: str) -> bytes:
             raise AssertionError(f"should not synthesize: {text}")
-
-        def fail_downloader(url: str, destination: Path) -> None:
-            raise AssertionError(f"should not download: {url} -> {destination}")
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             output_dir = Path(tmp_dir) / "audio"
@@ -139,7 +126,6 @@ class SynthesizeEntriesTests(unittest.TestCase):
                 entries=[{"slide_number": 3, "narration": "keep me"}],
                 output_dir=output_dir,
                 synthesize=fail_synthesizer,
-                download_audio=fail_downloader,
                 overwrite=False,
             )
 

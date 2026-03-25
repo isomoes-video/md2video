@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>全键盘化工作流是怎么实现的？</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section id="title" class="section-divider hero-slide" data-state="is-section-divider">
+        <p class="eyebrow">KEYBOARD-FIRST / TOOLCHAIN MAP</p>
+        <h1>全键盘化工作流是怎么实现的？</h1>
+        <p class="hero-kicker text-xl">不是靠一个神奇软件，而是把桌面、编辑器、浏览器、终端都换成同一套 keyboard-first 逻辑。</p>
+        <p class="hero-meta">窗口管理 / modal editing / link hints / CLI + AI agent</p>
+      </section>
+
+      <section id="stack-overview">
+        <h2>先记住一句话：这是一套分层栈，不是单点技巧</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; align-items: stretch;">
+            <div class="layer-card accent-desktop compact-card">
+              <p class="layer-index">第 1 层</p>
+              <div>
+                <h3>桌面 / 窗口管理</h3>
+                <p>先把焦点移动、工作区切换、布局调整变成键盘动作</p>
+              </div>
+            </div>
+            <div class="layer-card accent-editor compact-card">
+              <p class="layer-index">第 2 层</p>
+              <div>
+                <h3>编辑器 / IDE</h3>
+                <p>用 Vim 逻辑统一移动、搜索、选择、修改</p>
+              </div>
+            </div>
+            <div class="layer-card accent-browser compact-card">
+              <p class="layer-index">第 3 层</p>
+              <div>
+                <h3>浏览器导航</h3>
+                <p>用 link hints 和滚动键位把网页重新变成可跳转界面</p>
+              </div>
+            </div>
+            <div class="layer-card accent-terminal compact-card">
+              <p class="layer-index">第 4 层</p>
+              <div>
+                <h3>终端 / CLI / AI 工作流</h3>
+                <p>命令、prompt、agent 和审查链路继续 keyboard-first</p>
+              </div>
+            </div>
+          </div>
+          <div class="signal-strip">
+            <p><strong>真正的统一点</strong>是让 `hjkl`、modal、leader、link hints 在不同软件里重复出现。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="divider-layers" class="section-divider chapter-divider" data-state="is-section-divider">
+        <p class="eyebrow">PART 01</p>
+        <h1>四层 keyboard-first 栈</h1>
+        <p>从桌面到底层，再一路串到浏览器与 AI 工作流</p>
+      </section>
+
+      <section>
+        <section id="desktop-layer">
+          <h2>第 1 层：桌面先统一，工作流才不会断流</h2>
+          <div class="content">
+            <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: stretch;">
+              <div class="panel panel-soft">
+                <p class="panel-label">为什么从窗口管理开始</p>
+                <ul>
+                  <li>切窗口、切工作区、移动焦点如果还靠鼠标，编辑效率会被频繁打断</li>
+                  <li>平铺窗口管理器适合把方向键统一成 `h/j/k/l` 风格</li>
+                  <li>底层统一之后，上层编辑和浏览才会真正顺起来</li>
+                </ul>
+              </div>
+              <div class="stacked-steps">
+                <div class="step-card"><p class="step-title">TOOLS</p><p>River / Sway / Niri / Hyprland</p></div>
+                <div class="step-card"><p class="step-title">ACTION MAP</p><p>聚焦移动、布局调整、工作区切换都绑定到键盘</p></div>
+                <div class="step-card caution"><p class="step-title">RESULT</p><p>鼠标不再是切换上下文的默认入口</p></div>
+              </div>
+            </div>
+            <p class="footnote">文档入口：窗口管理器总览 / Niri / Sway / Arch Linux Dotfiles</p>
+          </div>
+        </section>
+
+        <section id="editor-layer">
+          <h2>第 2 层：编辑器用 Vim 逻辑统一高频文本动作</h2>
+          <div class="content">
+            <div class="triad-grid">
+              <div class="feature-card">
+                <p class="feature-icon"><i class="fa-solid fa-keyboard"></i></p>
+                <h3>Neovim</h3>
+                <p>最纯粹的 modal editing，把移动、编辑、对象操作都收回键盘。</p>
+              </div>
+              <div class="feature-card">
+                <p class="feature-icon"><i class="fa-solid fa-code"></i></p>
+                <h3>VSCode + Neovim</h3>
+                <p>保留现代 IDE 生态，同时把主操作逻辑统一到 VIM 键位。</p>
+              </div>
+              <div class="feature-card">
+                <p class="feature-icon"><i class="fa-solid fa-bolt"></i></p>
+                <h3>Zed</h3>
+                <p>更现代的界面，但依然强调键盘控制与快速跳转。</p>
+              </div>
+            </div>
+            <div class="signal-strip alt">
+              <p>刚开始别追求 100% 不碰鼠标，先迁移 <strong>移动、搜索、切文件、切窗口</strong> 这四类动作。</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="browser-layer">
+          <h2>第 3 层：浏览器补齐之后，键盘体验才会闭环</h2>
+          <div class="content">
+            <div style="display: grid; grid-template-columns: 0.92fr 1.08fr; gap: 24px; align-items: stretch;">
+              <div class="panel panel-dark">
+                <p class="panel-label">先记住这几个动作</p>
+                <div class="chip-cloud">
+                  <p class="chip">f 点链接</p>
+                  <p class="chip">j / k 滚动</p>
+                  <p class="chip">d / u 翻页</p>
+                  <p class="chip">t / T 标签页</p>
+                </div>
+              </div>
+              <div class="panel panel-strong">
+                <ul>
+                  <li>Qutebrowser 是原生 keyboard-first 浏览器</li>
+                  <li>更容易落地的方案通常是 Chrome / Firefox + Surfingkeys</li>
+                  <li>link hints 让网页元素重新变成“可跳转目标”，而不是只能点选的区域</li>
+                </ul>
+              </div>
+            </div>
+            <blockquote>
+              <p>很多人最后卡在浏览器里；这层一补齐，工作节奏才不会每次打开网页就重置。</p>
+            </blockquote>
+          </div>
+        </section>
+
+        <section id="terminal-layer">
+          <h2>第 4 层：终端优先，进一步变成 CLI / AI agent 工作流</h2>
+          <div class="content">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch;">
+              <div class="mini-card">
+                <p class="mini-kicker">TERMINAL-FIRST</p>
+                <p>很多操作直接变成命令，而不是在 GUI 面板里来回点选。</p>
+              </div>
+              <div class="mini-card">
+                <p class="mini-kicker">AI AGENT-FIRST</p>
+                <p>任务被写成 prompt、命令、检查和审查链路，更容易调用与验证。</p>
+              </div>
+              <div class="mini-card accent-card">
+                <p class="mini-kicker">WHY IT MATTERS</p>
+                <p>键盘优先不只是少用鼠标，而是让工作流更可脚本化、更可组合。</p>
+              </div>
+            </div>
+            <div class="quote-panel">
+              <p class="text-xl">这一层对应的文档方向是 <strong>OpenCode、iKanban、多 agent 并行工作流</strong>，也就是把“操作界面”继续抽象成可执行流程。</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section id="divider-practice" class="section-divider chapter-divider" data-state="is-section-divider">
+        <p class="eyebrow">PART 02</p>
+        <h1>补充问题与最短上手路径</h1>
+        <p>按键显示工具是什么，以及第一次阅读该怎么走</p>
+      </section>
+
+      <section id="showkeys">
+        <h2>如果你问的是“视频里的按键浮窗是什么？”</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: stretch;">
+            <div class="panel panel-soft">
+              <p class="panel-label">答案</p>
+              <p class="text-xl"><strong>wshowkeys_rs</strong></p>
+              <p>它负责把已经按下的键实时显示出来，适合录教程、直播、演示快捷键，或者调试键位绑定。</p>
+            </div>
+            <div class="panel panel-strong">
+              <p class="panel-label">别和工作流本身混在一起</p>
+              <ul>
+                <li>全键盘化 = 输入方式与工具栈设计</li>
+                <li>按键显示 = 把输入过程可视化给观众看</li>
+                <li>一个是 workflow，本质上层；一个是 overlay，属于展示层</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="reading-route">
+        <h2>第一次接触这套体系，最短阅读路线是这样</h2>
+        <div class="content">
+          <div class="route-list">
+            <div class="route-step"><p class="route-no">1</p><p><strong>窗口管理器总览</strong>：先理解桌面层为什么是起点</p></div>
+            <div class="route-step"><p class="route-no">2</p><p><strong>VSCode + Neovim</strong> 或 <strong>Zed</strong>：建立编辑器层习惯</p></div>
+            <div class="route-step"><p class="route-no">3</p><p><strong>Surfingkeys 指南</strong>：把浏览器补齐</p></div>
+            <div class="route-step"><p class="route-no">4</p><p><strong>OpenCode</strong> / <strong>更好的 AI IDE</strong>：延伸到终端和 agent</p></div>
+            <div class="route-step"><p class="route-no">5</p><p><strong>wshowkeys_rs</strong>：只有在需要展示快捷键时再补</p></div>
+          </div>
+          <div class="signal-strip">
+            <p>优点在于可以按层迁移：<strong>每补上一层，就少一点鼠标依赖，也多一点逻辑统一。</strong></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="conclusion">
+        <h2>最后收束：不是一个工具，而是一整套统一逻辑</h2>
+        <div class="content">
+          <div class="score-grid">
+            <div class="score-card"><p class="score-value">1</p><p class="score-label">窗口层统一焦点移动</p></div>
+            <div class="score-card"><p class="score-value">2</p><p class="score-label">编辑层统一文本操作</p></div>
+            <div class="score-card"><p class="score-value">3</p><p class="score-label">浏览层统一网页导航</p></div>
+            <div class="score-card accent-card"><p class="score-value">4</p><p class="score-label">终端层统一命令与 agent</p></div>
+          </div>
+          <div class="conclusion-band">
+            <p class="text-2xl">真正的目标不是“炫技”，而是让 <strong>切窗口、写代码、看网页、跑任务</strong> 都遵循同一套心智模型。</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js-plugins@latest/chart/plugin.js"></script>
+  <script>
+    Reveal.initialize({
+      width: 1280,
+      height: 720,
+      margin: 0,
+      controls: true,
+      progress: true,
+      slideNumber: true,
+      hash: true,
+      transition: 'slide',
+      center: false,
+      plugins: [RevealChart],
+      chart: {
+        defaults: Object.assign({
+          color: 'rgba(237, 244, 251, 0.88)',
+          borderColor: 'rgba(237, 244, 251, 0.88)',
+          devicePixelRatio: 2
+        }, window.location.search.includes('export') ? { animation: false } : {})
+      }
+    });
+  </script>
+</body>
+</html>
