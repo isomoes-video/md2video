@@ -25,7 +25,10 @@ You are generating narration audio from approved script content.
 
 - Prefer a standalone Python script that runs with `uv run`.
 - Default the script to reading the target `script.json` and writing next to it under `audio/`.
-- Use `qwen-tts-vd-bailian-voice-20260323160336093-f9d8` as the default voice id.
+- Use `cosyvoice-v3-flash` as the default model.
+- Use `longanyang` as the default voice.
 - Allow overriding at least the script path, voice, and model from the CLI.
-- Use the Beijing DashScope HTTP endpoint by default unless a different region is explicitly needed.
-- Fail clearly when `DASHSCOPE_API_KEY` is missing or the API response does not contain downloadable audio.
+- Use the Beijing DashScope WebSocket endpoint by default unless a different region is explicitly needed.
+- Use `dashscope.audio.tts_v2.SpeechSynthesizer` and write returned audio bytes directly to mp3 files.
+- Create a fresh synthesizer per narration request if the SDK connection lifecycle requires it.
+- Fail clearly when `DASHSCOPE_API_KEY` is missing or the TTS API returns no audio.

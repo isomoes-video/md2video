@@ -434,4 +434,4 @@ Required for the scripts, should be already installed:
 - **Bun** (for running local scripts and managing packages)
 - **Puppeteer** (for overflow checking): `bun add puppeteer`
 - **Cheerio** (for chart validation): `bun add cheerio`
-- **Decktape** (for screenshots): `bunx decktape` (runs directly)
+- **Decktape** (for screenshots): `bun x decktape` (runs directly)

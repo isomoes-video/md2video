@@ -12,13 +12,12 @@ import json
 import os
 from pathlib import Path
 from typing import Any, Callable
-from urllib.request import urlopen
 
 
-DEFAULT_MODEL = "qwen3-tts-vd-2026-01-26"
-DEFAULT_VOICE = "qwen-tts-vd-bailian-voice-20260323160336093-f9d8"
+DEFAULT_MODEL = "cosyvoice-v3.5-flash"
+DEFAULT_VOICE = "longanxuan_v3"
 DEFAULT_SCRIPT = Path("plan/linux-best-os-ai-agent-coding/script.json")
-DEFAULT_BASE_HTTP_API_URL = "https://dashscope.aliyuncs.com/api/v1"
+DEFAULT_BASE_WEBSOCKET_API_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
 
 
 def load_script_entries(script_path: Path) -> list[dict[str, Any]]:
@@ -57,50 +56,26 @@ def build_output_path(output_dir: Path, slide_number: int) -> Path:
     return output_dir / f"slide-{slide_number:02d}.mp3"
 
 
-def _get_value(obj: Any, key: str) -> Any:
-    if isinstance(obj, dict):
-        return obj.get(key)
-    return getattr(obj, key, None)
-
-
-def extract_audio_url(response: Any) -> str:
-    output = _get_value(response, "output")
-    audio = _get_value(output, "audio")
-    url = _get_value(audio, "url")
-    if isinstance(url, str) and url:
-        return url
-    raise ValueError("DashScope response did not include output.audio.url")
-
-
-def download_audio_file(url: str, destination: Path) -> None:
-    with urlopen(url) as response:
-        destination.write_bytes(response.read())
-
-
 def make_dashscope_synthesizer(
     model: str,
     voice: str,
     api_key: str,
-    base_http_api_url: str,
-    language_type: str | None,
-) -> Callable[[str], str]:
+    base_websocket_api_url: str,
+) -> Callable[[str], bytes]:
     import dashscope
+    from dashscope.audio.tts_v2 import SpeechSynthesizer
 
-    dashscope.base_http_api_url = base_http_api_url
+    dashscope.api_key = api_key
+    dashscope.base_websocket_api_url = base_websocket_api_url
 
-    def synthesize(text: str) -> str:
-        request_kwargs: dict[str, Any] = {
-            "model": model,
-            "api_key": api_key,
-            "text": text,
-            "voice": voice,
-            "stream": False,
-        }
-        if language_type:
-            request_kwargs["language_type"] = language_type
-
-        response = dashscope.MultiModalConversation.call(**request_kwargs)
-        return extract_audio_url(response)
+    def synthesize(text: str) -> bytes:
+        synthesizer = SpeechSynthesizer(model=model, voice=voice)
+        audio = synthesizer.call(text)
+        if not isinstance(audio, bytes) or not audio:
+            raise RuntimeError(
+                f"DashScope TTS returned no audio for model={model!r} voice={voice!r}"
+            )
+        return audio
 
     return synthesize
 
@@ -108,8 +83,7 @@ def make_dashscope_synthesizer(
 def synthesize_script_entries(
     entries: list[dict[str, Any]],
     output_dir: Path,
-    synthesize: Callable[[str], str],
-    download_audio: Callable[[str, Path], None],
+    synthesize: Callable[[str], bytes],
     overwrite: bool,
 ) -> list[Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -121,8 +95,8 @@ def synthesize_script_entries(
             written_files.append(output_path)
             continue
 
-        audio_url = synthesize(entry["narration"])
-        download_audio(audio_url, output_path)
+        audio_bytes = synthesize(entry["narration"])
+        output_path.write_bytes(audio_bytes)
         written_files.append(output_path)
 
     return written_files
@@ -154,13 +128,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="DashScope voice name or custom voice id.",
     )
     parser.add_argument(
-        "--language-type",
-        help="Optional DashScope language_type value such as Chinese or English.",
-    )
-    parser.add_argument(
-        "--base-http-api-url",
-        default=DEFAULT_BASE_HTTP_API_URL,
-        help="DashScope HTTP API base URL.",
+        "--base-websocket-api-url",
+        default=DEFAULT_BASE_WEBSOCKET_API_URL,
+        help="DashScope WebSocket API base URL.",
     )
     parser.add_argument(
         "--overwrite",
@@ -183,14 +153,12 @@ def main() -> int:
         model=args.model,
         voice=args.voice,
         api_key=api_key,
-        base_http_api_url=args.base_http_api_url,
-        language_type=args.language_type,
+        base_websocket_api_url=args.base_websocket_api_url,
     )
     written_files = synthesize_script_entries(
         entries=entries,
         output_dir=output_dir,
         synthesize=synthesize,
-        download_audio=download_audio_file,
         overwrite=args.overwrite,
     )
 
