@@ -17,6 +17,7 @@ from typing import NamedTuple, Sequence
 
 DEFAULT_PDF = Path("plan/linux-best-os-ai-agent-coding/output.pdf")
 AUDIO_FILE_PATTERN = re.compile(r"^slide-(\d+)\.mp3$")
+DEFAULT_SLIDE_GAP_SECONDS = 0.25
 
 
 class SlideAsset(NamedTuple):
@@ -156,7 +157,14 @@ def probe_audio_duration(audio_path: Path) -> float:
     return float(result.stdout.strip())
 
 
-def render_slide_segment(asset: SlideAsset, duration: float, overwrite: bool) -> None:
+def render_slide_segment(
+    asset: SlideAsset,
+    duration: float,
+    trailing_gap: float,
+    overwrite: bool,
+) -> None:
+    total_duration = duration + trailing_gap
+    audio_filter = f"apad=pad_dur={trailing_gap:.6f}" if trailing_gap > 0 else "anull"
     command = [
         "ffmpeg",
         "-y" if overwrite else "-n",
@@ -165,13 +173,15 @@ def render_slide_segment(asset: SlideAsset, duration: float, overwrite: bool) ->
         "-framerate",
         "1",
         "-t",
-        f"{duration:.6f}",
+        f"{total_duration:.6f}",
         "-i",
         str(asset.image_path),
         "-i",
         str(asset.audio_path),
         "-vf",
         "pad=ceil(iw/2)*2:ceil(ih/2)*2",
+        "-af",
+        audio_filter,
         "-c:v",
         "libx264",
         "-preset",
@@ -243,6 +253,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Overwrite intermediate and final video files if they already exist.",
     )
+    parser.add_argument(
+        "--slide-gap",
+        type=float,
+        default=DEFAULT_SLIDE_GAP_SECONDS,
+        help=(
+            "Silent hold in seconds to append between slides. "
+            f"Defaults to {DEFAULT_SLIDE_GAP_SECONDS:.2f}."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -263,6 +282,8 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"PDF not found: {pdf_path}")
     if not audio_dir.exists():
         raise SystemExit(f"Audio directory not found: {audio_dir}")
+    if args.slide_gap < 0:
+        raise SystemExit("--slide-gap must be non-negative")
 
     images_dir = work_dir / "slides"
     segments_dir = work_dir / "segments"
@@ -278,12 +299,20 @@ def main(argv: list[str] | None = None) -> int:
     render_pdf_pages(pdf_path, slide_assets)
 
     segment_paths: list[Path] = []
-    for asset in slide_assets:
+    for index, asset in enumerate(slide_assets):
         duration = probe_audio_duration(asset.audio_path)
+        trailing_gap = args.slide_gap if index < len(slide_assets) - 1 else 0.0
         print(
-            f"slide {asset.slide_number:02d}: {asset.image_path} + {asset.audio_path} ({duration:.3f}s)"
+            "slide "
+            f"{asset.slide_number:02d}: {asset.image_path} + {asset.audio_path} "
+            f"(audio={duration:.3f}s, gap={trailing_gap:.3f}s)"
         )
-        render_slide_segment(asset, duration, overwrite=args.overwrite)
+        render_slide_segment(
+            asset,
+            duration,
+            trailing_gap,
+            overwrite=args.overwrite,
+        )
         segment_paths.append(asset.segment_path)
 
     write_concat_manifest(segment_paths, manifest_path)

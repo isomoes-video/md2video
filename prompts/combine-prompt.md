@@ -7,6 +7,7 @@ You are assembling the final narrated video.
 - Read `output/<presentation-slug>/output.pdf` and `output/<presentation-slug>/audio/`.
 - Treat each PDF page as one slide visual and each matching mp3 as that slide narration.
 - Derive each slide's on-screen duration from the actual audio length.
+- Add a very short default pause between slides so slide transitions do not feel abrupt.
 - Build a video where each slide image stays visible for the full duration of its narration audio.
 - Concatenate all slide segments in slide order into one final video.
 
@@ -28,8 +29,9 @@ You are assembling the final narrated video.
 - Use FFmpeg for the final video assembly.
 - Convert PDF pages into per-slide still images before video assembly.
 - For each slide, create a video segment from the still image whose duration matches the exact narration audio duration.
+- Extend each slide segment by a small default trailing hold between slides, and make that hold configurable through a script argument.
 - Combine the still image and its matching mp3 into a single per-slide segment, then concatenate all segments in order.
 - Use explicit output settings for video and audio codecs.
-- Ensure the final video contains both the slide visuals and the narration audio, with no silent gaps between slides unless the audio itself contains them.
+- Ensure the final video contains both the slide visuals and the narration audio, with only the configured inter-slide pause added beyond the narration.
 - Prefer a standalone script runnable with `uv run` that accepts at least the presentation directory or PDF path as input.
 - Log or print the resolved slide/audio mapping and final output path so the workflow is easy to verify.
