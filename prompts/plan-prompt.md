@@ -12,6 +12,7 @@ You are preparing source content for reveal.js presentation and narration produc
 - Produce `script.json` with one narration entry per slide.
 - Produce a PDF export where each slide is rendered as its own PDF page.
 - Keep slide content concise and narration more conversational than the slide text.
+- Ensure narration flows smoothly from slide to slide, avoiding abrupt topic jumps between consecutive `script.json` entries.
 
 ## Presentation requirements
 
@@ -25,6 +26,14 @@ You are preparing source content for reveal.js presentation and narration produc
 - `output/<presentation-slug>/styles.css`: custom presentation theme CSS.
 - `output/<presentation-slug>/script.json`: array of objects with only `slide_number` and `narration`.
 - `output/<presentation-slug>/output.pdf`: exported PDF with one slide per page.
+
+## Narration continuity requirements
+
+- Write `script.json` as a connected talk, not as isolated slide summaries.
+- Each narration entry should feel like a natural continuation of the previous slide and a setup for the next one.
+- Use brief transition phrasing when needed, such as introducing the next point, contrasting with the prior slide, or summarizing before moving on.
+- Avoid repetitive hard resets like reintroducing the topic from scratch on each slide unless the structure explicitly requires it.
+- Keep transitions subtle and conversational, not formulaic.
 
 ## Export requirements
 
