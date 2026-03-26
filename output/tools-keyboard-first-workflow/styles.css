@@ -23,6 +23,7 @@
   --card-dark-text: #f5fbff;
   --slide-padding: 54px;
   --slide-padding-top: 30px;
+  --watermark-safe-top: 44px;
   --content-gap: 18px;
   --box-radius: 18px;
 }
@@ -114,7 +115,7 @@
   height: 100%;
   display: flex !important;
   flex-direction: column !important;
-  padding: var(--slide-padding-top) var(--slide-padding) var(--slide-padding) var(--slide-padding) !important;
+  padding: calc(var(--slide-padding-top) + var(--watermark-safe-top)) var(--slide-padding) var(--slide-padding) var(--slide-padding) !important;
   box-sizing: border-box;
   text-align: left;
 }
