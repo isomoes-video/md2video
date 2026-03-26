@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>md2video：一种 Agent-First 的 Markdown 转视频方式</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section id="title" class="section-divider hero-slide" data-state="is-section-divider">
+        <p class="eyebrow">AGENT-FIRST / PROMPT-DRIVEN / VIDEO WORKSPACE</p>
+        <h1>md2video：一种 Agent-First 的 Markdown 转视频方式</h1>
+        <p class="hero-kicker text-xl">它不是围绕 GUI 表单设计的小工具，而是把 prompt、skills、脚本和 output workspace 绑在一起，给 agent 直接执行。</p>
+        <div class="hero-meta-row">
+          <p class="hero-meta">Markdown source</p>
+          <p class="hero-meta">Reveal.js slides</p>
+          <p class="hero-meta">Narration audio</p>
+          <p class="hero-meta">Final MP4</p>
+        </div>
+      </section>
+
+      <section id="why-it-matters">
+        <h2>为什么 md2video 值得单独写一篇文章</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 24px; align-items: stretch;">
+            <div class="panel panel-strong">
+              <p class="panel-label">不是传统应用的默认设定</p>
+              <ul>
+                <li>大多数软件仍然围绕人类操作者设计：GUI、CLI、SDK 各自服务不同入口</li>
+                <li><strong>md2video</strong> 的第一输入却更像 <strong>prompt 文件</strong>，直接面向 agent 执行</li>
+                <li>仓库本身预先声明了阶段、边界、产物目录与质量要求</li>
+              </ul>
+            </div>
+            <div class="stacked-column">
+              <div class="mini-card accent-card">
+                <p class="mini-kicker">HUMAN ROLE</p>
+                <p>给方向、审查中间产物、决定是否进入下一阶段</p>
+              </div>
+              <div class="mini-card">
+                <p class="mini-kicker">AGENT ROLE</p>
+                <p>读 prompt、调工具、写 artifact，并维护整个 workspace 一致性</p>
+              </div>
+            </div>
+          </div>
+          <div class="signal-strip">
+            <p><strong>所以它更像一个 agent workspace 样本，</strong>而不只是“把 Markdown 变视频”的脚本集合。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="workspace-first">
+        <h2>第一输入不是 GUI，而是一个可执行的 workspace 契约</h2>
+        <div class="content">
+          <div class="triad-grid">
+            <div class="feature-card">
+              <p class="feature-icon"><i class="fa-solid fa-file-lines"></i></p>
+              <h3>Stage Prompts</h3>
+              <p>每个 prompt 明确告诉 agent：当前阶段该产出什么、输出到哪里、遵守什么规则。</p>
+            </div>
+            <div class="feature-card">
+              <p class="feature-icon"><i class="fa-solid fa-folder-tree"></i></p>
+              <h3>Output Workspace</h3>
+              <p>所有成果都收敛到同一个 `output/&lt;slug&gt;/` 目录，天然可检查、可续跑、可组合。</p>
+            </div>
+            <div class="feature-card">
+              <p class="feature-icon"><i class="fa-solid fa-list-check"></i></p>
+              <h3>Artifact Contract</h3>
+              <p>`presentation.html`、`styles.css`、`script.json`、`audio/`、`video.mp4` 都是显式产物。</p>
+            </div>
+          </div>
+          <blockquote>
+            <p>真正关键的不是“让 AI 帮我点按钮”，而是提前把任务表面、工具边界和输出契约都写进仓库。</p>
+          </blockquote>
+        </div>
+      </section>
+
+      <section id="skills-mcp-workspace">
+        <h2>Skills + MCP + Workspace，在同一个目录里协同</h2>
+        <div class="content">
+          <div class="flow-grid">
+            <div class="flow-card source-card">
+              <p class="flow-title">Prompt / Stage Files</p>
+              <p>计划、TTS、合成等 prompt 把行为拆成清晰阶段。</p>
+            </div>
+            <div class="flow-card skill-card">
+              <p class="flow-title">Skills</p>
+              <p>Reveal.js skill 提供结构、样式、审查和导出规则。</p>
+            </div>
+            <div class="flow-card tool-card">
+              <p class="flow-title">MCP / Scripts</p>
+              <p>TTS 与 FFmpeg 组合脚本负责真正执行。</p>
+            </div>
+            <div class="flow-card agent-card wide-card">
+              <p class="flow-title">Agent</p>
+              <p>不是从零猜流程，而是在完整工作表面上规划、调用、写入并验证。</p>
+            </div>
+            <div class="flow-card output-card wide-card">
+              <p class="flow-title">Artifacts</p>
+              <p>`presentation.html` / `script.json` / `audio/*.mp3` / `video.mp4`</p>
+            </div>
+          </div>
+          <div class="legend-row">
+            <p><span class="legend-dot legend-a"></span> 知识被 skill 打包</p>
+            <p><span class="legend-dot legend-b"></span> 执行能力被脚本打包</p>
+            <p><span class="legend-dot legend-c"></span> workspace 把二者绑到同一上下文</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="gui-cli-cui">
+        <h2>从 GUI、CLI 到 CUI：聊天回路变成新的编排层</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch;">
+            <div class="comparison-card muted-card">
+              <p class="mini-kicker">GUI</p>
+              <p class="text-xl"><strong>点选界面</strong></p>
+              <p>适合直接操作具体控件，但不擅长承接长链路任务。</p>
+            </div>
+            <div class="comparison-card muted-card">
+              <p class="mini-kicker">CLI</p>
+              <p class="text-xl"><strong>命令入口</strong></p>
+              <p>适合精确调用单个动作，但意图编排仍然偏手工。</p>
+            </div>
+            <div class="comparison-card accent-card">
+              <p class="mini-kicker">CUI</p>
+              <p class="text-xl"><strong>聊天编排层</strong></p>
+              <p>用户表达目标，agent 决定该读哪些 prompt、调用哪些工具、产出哪些 artifact。</p>
+            </div>
+          </div>
+          <div class="quote-panel">
+            <p>这并不是说 GUI 和 CLI 消失了，而是它们开始退到执行层；<strong>CUI 负责承接意图，repo 负责承接契约。</strong></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="pipeline">
+        <h2>md2video 把 Markdown 变成视频，走的是可检查的文件系统流程</h2>
+        <div class="content">
+          <div class="route-list compact-route">
+            <div class="route-step"><p class="route-no">1</p><p><strong>source.md</strong> 或直接文本输入，作为 planning 阶段上下文</p></div>
+            <div class="route-step"><p class="route-no">2</p><p><strong>plan prompt</strong> 生成 slides、theme、`script.json` 与 `output.pdf`</p></div>
+            <div class="route-step"><p class="route-no">3</p><p><strong>review</strong> 审查 workspace，确认是否进入语音阶段</p></div>
+            <div class="route-step"><p class="route-no">4</p><p><strong>tts prompt</strong> 为每页旁白写出 `audio/slide-XX.mp3`</p></div>
+            <div class="route-step"><p class="route-no">5</p><p><strong>combine prompt</strong> 按 PDF 页面顺序与音频时长合成 `video.mp4`</p></div>
+          </div>
+          <div class="signal-strip alt">
+            <p>Markdown → slides → narration units → MP3 → MP4。<strong>每一跳都是清晰 artifact，不是隐藏在黑箱里的中间状态。</strong></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="bigger-direction">
+        <h2>这个项目很小，但它在提示一种新的默认软件形态</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 24px; align-items: stretch;">
+            <div class="panel panel-soft">
+              <p class="panel-label">Agent-native software sample</p>
+              <ul>
+                <li>有 prompt 入口</li>
+                <li>有可复用 skill</li>
+                <li>有工具访问层</li>
+                <li>有严格输出契约</li>
+              </ul>
+            </div>
+            <div class="panel panel-strong">
+              <p class="panel-label">背后的趋势</p>
+              <p class="text-lg">软件交付不再只是一款 app 或一个 library，也越来越像一个供 agent 执行、供人类审核的 workspace。</p>
+              <p>人表达意图，agent 围绕清晰定义的 artifact 去工作，这可能会成为很多 AI 工作流里的新默认值。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="conclusion">
+        <h2>一句话收束：md2video 让软件从“界面优先”转向“workspace 优先”</h2>
+        <div class="content">
+          <div class="score-grid">
+            <div class="score-card"><p class="score-value">Prompt</p><p class="score-label">定义阶段行为</p></div>
+            <div class="score-card"><p class="score-value">Skill</p><p class="score-label">定义知识与规则</p></div>
+            <div class="score-card"><p class="score-value">Tool</p><p class="score-label">负责真实执行</p></div>
+            <div class="score-card accent-card"><p class="score-value">CUI</p><p class="score-label">连接意图与产物</p></div>
+          </div>
+          <div class="conclusion-band">
+            <p class="text-2xl">如果要给它下定义：<strong>md2video 是一个 agent-first、prompt-driven 的 Markdown 转旁白视频工作流。</strong></p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      width: 1280,
+      height: 720,
+      margin: 0,
+      controls: true,
+      progress: true,
+      slideNumber: true,
+      hash: true,
+      transition: 'slide',
+      center: false,
+    });
+  </script>
+</body>
+</html>

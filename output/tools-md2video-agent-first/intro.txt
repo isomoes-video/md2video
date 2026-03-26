@@ -1,0 +1,8 @@
+中文标题：md2video：一种 Agent-First 的 Markdown 转视频方式
+English Title: md2video: An Agent-First Way to Turn Markdown into Video
+
+这个视频围绕 md2video 这个很小但很有代表性的项目展开，说明它为什么不只是一个“把 Markdown 变成视频”的工具，而更像一个 agent-first 软件样本。视频先解释一个核心变化：今天越来越多工作流里，一线操作者开始从人类转向 AI agent，因此软件的第一输入、能力边界和目录结构也需要随之变化。md2video 的特别之处，就在于它不是把 GUI 表单当成主入口，而是把 prompt、skills、脚本和输出目录组织成一个可直接交给 agent 执行的 workspace。
+
+在此基础上，视频进一步讨论 Skills、MCP 风格工具能力和 workspace 三者如何协同工作：skill 负责打包知识和工作流约束，脚本负责真正执行 TTS 与视频拼接，workspace 则把这些能力收束到统一的 artifact 目录里，让 agent 能在不丢上下文的情况下连续规划、生成、检查和迭代。随后，视频把这种变化放到更大的界面演进里理解，指出很多 AI 工作流的主界面正在从 GUI、CLI 逐渐走向 CUI，也就是 Chat User Interface：人类负责表达目标，agent 负责决定该调用哪些 prompt、哪些工具、以及该产出哪些文件。
+
+最后，视频回到 md2video 的具体流程，梳理它如何把 source 内容一步步变成 reveal.js 幻灯片、narration script、逐页 MP3，以及最终的 MP4 视频，并强调这种按 artifact 分阶段推进的方式为什么特别适合 agent 执行和人类审查。整体上，这个视频想表达的不只是一个项目介绍，而是一个更大的判断：未来的软件交付形态，可能会越来越多地从“界面优先”转向“workspace 优先”，也就是让 prompt、skill、tool 和清晰的输出契约一起构成新的默认工作表面。

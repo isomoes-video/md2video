@@ -1,0 +1,34 @@
+[
+  {
+    "slide_number": 1,
+    "narration": "这一页先把结论说清楚。md2video 虽然表面上是一个把 Markdown 变成旁白视频的小项目，但它真正特别的地方，是它从一开始就不是围绕 GUI 表单来设计的，而是把 prompt、skills、脚本和输出目录组织成一个 agent-first 的工作空间。"
+  },
+  {
+    "slide_number": 2,
+    "narration": "所以第二页先解释为什么它值得单独写一篇文章。大多数软件今天仍然默认人类自己点按钮、敲命令或者调 SDK，但在越来越多工作流里，一线操作者已经变成 AI agent。md2video 把这种变化直接写进了仓库结构里，让人负责给方向和审查，而把具体执行交给 agent。"
+  },
+  {
+    "slide_number": 3,
+    "narration": "再往下看，md2video 的第一输入其实不是某个设置面板，而是一组按阶段拆开的 prompt。它们提前规定当前阶段的目标、输出目录和规则。于是仓库本身就变成一个 workspace 契约，agent 不需要从零猜流程，只要沿着这些 artifact 一步步生成和检查。"
+  },
+  {
+    "slide_number": 4,
+    "narration": "接下来就是它最有代表性的部分，也就是 Skills、MCP 风格的工具能力，以及 workspace 之间的协同。skill 负责把知识和工作流要求打包，脚本负责真正执行，workspace 则把它们绑在同一个目录里。对 agent 来说，这意味着它看到的是一个完整的工作表面，而不是零散功能点。"
+  },
+  {
+    "slide_number": 5,
+    "narration": "从这里也就能理解另一个更大的变化。很多 AI 工作流的主要界面，已经不再只是 GUI 或 CLI，而是聊天回路本身，也就是我说的 CUI。用户用自然语言表达目标，agent 再决定该读哪些 prompt、调用哪些工具、产出哪些文件。GUI 和 CLI 还在，但更像执行层，而不是唯一入口。"
+  },
+  {
+    "slide_number": 6,
+    "narration": "如果回到项目流程本身，md2video 的路径其实非常克制也非常清晰。先从 source 内容生成 reveal.js 幻灯片、样式、script.json 和 PDF，然后审查 workspace，再逐页生成旁白音频，最后按 PDF 页面和音频时长把它们拼成视频。每个阶段都能停下来检查，这正是 agent 工作流特别需要的特性。"
+  },
+  {
+    "slide_number": 7,
+    "narration": "也正因为这样，这个项目虽然小，却在指向更大的方向。未来的软件交付，可能不只是 app 和 library，也会越来越多地表现成 agent workspace：有 prompt 入口，有 skill，有工具访问层，也有严格的输出契约。人类不再亲手驱动每一个步骤，而是更多负责审查和验收。"
+  },
+  {
+    "slide_number": 8,
+    "narration": "最后用一句话收束。md2video 的意义不只是把 Markdown 变成视频，而是用一个很紧凑的例子说明，软件正在从界面优先慢慢走向 workspace 优先，从 GUI 和 CLI 逐渐转向 CUI 加上清晰 artifact 的形态。这更像是 AI 时代一种新的默认值预告。"
+  }
+]
