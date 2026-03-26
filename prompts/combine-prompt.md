@@ -31,7 +31,11 @@ You are assembling the final narrated video.
 - For each slide, create a video segment from the still image whose duration matches the exact narration audio duration.
 - Extend each slide segment by a small default trailing hold between slides, and make that hold configurable through a script argument.
 - Combine the still image and its matching mp3 into a single per-slide segment, then concatenate all segments in order.
+- Encode slide segments and the final output with a normal constant frame rate such as 30 fps, not 1 fps, so common players can seek and play the MP4 reliably.
 - Use explicit output settings for video and audio codecs.
+- Choose audio settings that match narration content and sample rate so FFmpeg does not clamp to an invalid bitrate.
+- Ensure the final MP4 is optimized for normal playback and seeking, for example by writing fast-start metadata.
 - Ensure the final video contains both the slide visuals and the narration audio, with only the configured inter-slide pause added beyond the narration.
+- Verify that each segment duration fully covers its narration audio plus any configured hold, and fail if the produced video stream is shorter than the audio stream.
 - Prefer a standalone script runnable with `uv run` that accepts at least the presentation directory or PDF path as input.
 - Log or print the resolved slide/audio mapping and final output path so the workflow is easy to verify.

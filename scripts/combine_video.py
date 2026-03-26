@@ -18,6 +18,8 @@ from typing import NamedTuple, Sequence
 DEFAULT_PDF = Path("plan/linux-best-os-ai-agent-coding/output.pdf")
 AUDIO_FILE_PATTERN = re.compile(r"^slide-(\d+)\.mp3$")
 DEFAULT_SLIDE_GAP_SECONDS = 0.25
+DEFAULT_FPS = 30
+DEFAULT_AUDIO_BITRATE = "96k"
 
 
 class SlideAsset(NamedTuple):
@@ -162,16 +164,18 @@ def render_slide_segment(
     duration: float,
     trailing_gap: float,
     overwrite: bool,
+    fps: int,
+    audio_bitrate: str,
 ) -> None:
     total_duration = duration + trailing_gap
-    audio_filter = f"apad=pad_dur={trailing_gap:.6f}" if trailing_gap > 0 else "anull"
+    audio_filter = f"apad=whole_dur={total_duration:.6f}"
     command = [
         "ffmpeg",
         "-y" if overwrite else "-n",
         "-loop",
         "1",
         "-framerate",
-        "1",
+        str(fps),
         "-t",
         f"{total_duration:.6f}",
         "-i",
@@ -182,6 +186,10 @@ def render_slide_segment(
         "pad=ceil(iw/2)*2:ceil(ih/2)*2",
         "-af",
         audio_filter,
+        "-r",
+        str(fps),
+        "-t",
+        f"{total_duration:.6f}",
         "-c:v",
         "libx264",
         "-preset",
@@ -193,8 +201,7 @@ def render_slide_segment(
         "-c:a",
         "aac",
         "-b:a",
-        "192k",
-        "-shortest",
+        audio_bitrate,
         str(asset.segment_path),
     ]
     run_command(command)
@@ -210,14 +217,14 @@ def combine_segments(manifest_path: Path, output_path: Path, overwrite: bool) ->
         "0",
         "-i",
         str(manifest_path),
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        "-c:a",
-        "aac",
-        "-b:a",
-        "192k",
+        "-fflags",
+        "+genpts",
+        "-avoid_negative_ts",
+        "make_zero",
+        "-c",
+        "copy",
+        "-movflags",
+        "+faststart",
         str(output_path),
     ]
     run_command(command)
@@ -262,6 +269,20 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             f"Defaults to {DEFAULT_SLIDE_GAP_SECONDS:.2f}."
         ),
     )
+    parser.add_argument(
+        "--fps",
+        type=int,
+        default=DEFAULT_FPS,
+        help=f"Constant output frame rate for slide video segments. Defaults to {DEFAULT_FPS}.",
+    )
+    parser.add_argument(
+        "--audio-bitrate",
+        default=DEFAULT_AUDIO_BITRATE,
+        help=(
+            "AAC bitrate for rendered slide segments. "
+            f"Defaults to {DEFAULT_AUDIO_BITRATE}."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -284,6 +305,8 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"Audio directory not found: {audio_dir}")
     if args.slide_gap < 0:
         raise SystemExit("--slide-gap must be non-negative")
+    if args.fps <= 0:
+        raise SystemExit("--fps must be positive")
 
     images_dir = work_dir / "slides"
     segments_dir = work_dir / "segments"
@@ -312,6 +335,8 @@ def main(argv: list[str] | None = None) -> int:
             duration,
             trailing_gap,
             overwrite=args.overwrite,
+            fps=args.fps,
+            audio_bitrate=args.audio_bitrate,
         )
         segment_paths.append(asset.segment_path)
 
