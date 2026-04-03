@@ -21,12 +21,15 @@ DEFAULT_SLIDE_GAP_SECONDS = 0.25
 DEFAULT_FPS = 30
 DEFAULT_AUDIO_BITRATE = "96k"
 
+SubtitleMode = str  # "none" | "burn" | "mux"
+
 
 class SlideAsset(NamedTuple):
     slide_number: int
     audio_path: Path
     image_path: Path
     segment_path: Path
+    srt_path: Path | None = None
 
 
 def resolve_workspace_paths(
@@ -76,12 +79,15 @@ def build_slide_assets(
         audio_path = audio_files.get(slide_number)
         if audio_path is None:
             raise ValueError(f"Missing audio for slide {slide_number}")
+        srt_candidate = audio_dir / f"slide-{slide_number:02d}.srt"
+        srt_path = srt_candidate if srt_candidate.exists() else None
         assets.append(
             SlideAsset(
                 slide_number=slide_number,
                 audio_path=audio_path,
                 image_path=images_dir / f"slide-{slide_number:02d}.png",
                 segment_path=segments_dir / f"slide-{slide_number:02d}.mp4",
+                srt_path=srt_path,
             )
         )
 
@@ -166,9 +172,22 @@ def render_slide_segment(
     overwrite: bool,
     fps: int,
     audio_bitrate: str,
+    subtitle_mode: str = "none",
 ) -> None:
     total_duration = duration + trailing_gap
     audio_filter = f"apad=whole_dur={total_duration:.6f}"
+
+    has_srt = asset.srt_path is not None and asset.srt_path.exists()
+    use_burn = subtitle_mode == "burn" and has_srt
+    use_mux = subtitle_mode == "mux" and has_srt
+
+    # Base video filter: enforce even dimensions required by libx264
+    vf = "pad=ceil(iw/2)*2:ceil(ih/2)*2"
+    if use_burn:
+        # subtitles filter needs the path escaped for ffmpeg filter syntax
+        srt_escaped = str(asset.srt_path).replace("\\", "/").replace(":", r"\:")
+        vf = f"{vf},subtitles='{srt_escaped}'"
+
     command = [
         "ffmpeg",
         "-y" if overwrite else "-n",
@@ -182,8 +201,14 @@ def render_slide_segment(
         str(asset.image_path),
         "-i",
         str(asset.audio_path),
+    ]
+
+    if use_mux:
+        command += ["-i", str(asset.srt_path)]
+
+    command += [
         "-vf",
-        "pad=ceil(iw/2)*2:ceil(ih/2)*2",
+        vf,
         "-af",
         audio_filter,
         "-r",
@@ -202,8 +227,17 @@ def render_slide_segment(
         "aac",
         "-b:a",
         audio_bitrate,
-        str(asset.segment_path),
     ]
+
+    if use_mux:
+        command += [
+            "-c:s",
+            "mov_text",
+            "-metadata:s:s:0",
+            "language=chi",
+        ]
+
+    command.append(str(asset.segment_path))
     run_command(command)
 
 
@@ -283,6 +317,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             f"Defaults to {DEFAULT_AUDIO_BITRATE}."
         ),
     )
+    parser.add_argument(
+        "--subtitles",
+        choices=["none", "burn", "mux"],
+        default="none",
+        help=(
+            "Subtitle handling when slide-XX.srt files exist next to the MP3s. "
+            "'none' ignores them (default). "
+            "'burn' hard-codes subtitles into the video image. "
+            "'mux' embeds them as a soft subtitle track (requires MP4 container)."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -325,10 +370,16 @@ def main(argv: list[str] | None = None) -> int:
     for index, asset in enumerate(slide_assets):
         duration = probe_audio_duration(asset.audio_path)
         trailing_gap = args.slide_gap if index < len(slide_assets) - 1 else 0.0
+        subtitle_note = ""
+        if args.subtitles != "none":
+            if asset.srt_path is not None:
+                subtitle_note = f", srt={asset.srt_path.name} ({args.subtitles})"
+            else:
+                subtitle_note = " (no srt found)"
         print(
             "slide "
             f"{asset.slide_number:02d}: {asset.image_path} + {asset.audio_path} "
-            f"(audio={duration:.3f}s, gap={trailing_gap:.3f}s)"
+            f"(audio={duration:.3f}s, gap={trailing_gap:.3f}s{subtitle_note})"
         )
         render_slide_segment(
             asset,
@@ -337,6 +388,7 @@ def main(argv: list[str] | None = None) -> int:
             overwrite=args.overwrite,
             fps=args.fps,
             audio_bitrate=args.audio_bitrate,
+            subtitle_mode=args.subtitles,
         )
         segment_paths.append(asset.segment_path)
 

@@ -10,11 +10,13 @@ You are assembling the final narrated video.
 - Add a very short default pause between slides so slide transitions do not feel abrupt.
 - Build a video where each slide image stays visible for the full duration of its narration audio.
 - Concatenate all slide segments in slide order into one final video.
+- Embed subtitles when `slide-XX.srt` files are present in the `audio/` directory.
 
 ## Input contract
 
 - `output.pdf` contains one presentation slide per PDF page.
 - `audio/` contains one mp3 per slide, named by `slide_number`, for example `slide-01.mp3`, `slide-02.mp3`.
+- `audio/` may also contain one srt per slide, for example `slide-01.srt`, `slide-02.srt` (produced by the TTS step by default).
 - Slide order comes from the PDF page order and matching audio file numbers.
 - Fail clearly if any PDF page is missing a corresponding audio file, or if counts do not match.
 
@@ -23,6 +25,32 @@ You are assembling the final narrated video.
 - Output directory: write results inside the same `output/<presentation-slug>/` workspace.
 - Final artifact: `output/<presentation-slug>/video.mp4`.
 - Intermediate render assets, if needed, should stay under a subdirectory such as `output/<presentation-slug>/video-work/`.
+
+## Running the script
+
+Run the existing script with `uv run`:
+
+```bash
+# No subtitles (default, backward-compatible)
+uv run scripts/combine_video.py --pdf output/<presentation-slug>/output.pdf
+
+# Burn subtitles into the video image (hard-coded, always visible)
+uv run scripts/combine_video.py --pdf output/<presentation-slug>/output.pdf --subtitles burn --overwrite
+
+# Embed subtitles as a soft/togglable track inside the MP4
+uv run scripts/combine_video.py --pdf output/<presentation-slug>/output.pdf --subtitles mux --overwrite
+```
+
+**Key CLI flags:**
+- `--pdf` — path to `output.pdf`.
+- `--subtitles {none,burn,mux}` — subtitle handling when `slide-XX.srt` files exist (default: `none`).
+  - `none` — ignore SRT files.
+  - `burn` — hard-code subtitles into each slide image via FFmpeg `subtitles=` filter.
+  - `mux` — embed SRT as a soft subtitle track (`mov_text`) that players can toggle on/off.
+- `--overwrite` — overwrite existing intermediate and final video files.
+- `--slide-gap` — silent hold in seconds appended between slides (default: 0.25).
+- `--fps` — output frame rate (default: 30).
+- `--audio-bitrate` — AAC bitrate (default: 96k).
 
 ## Implementation requirements
 

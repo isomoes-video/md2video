@@ -83,9 +83,9 @@ class SynthesizeEntriesTests(unittest.TestCase):
         module = load_module()
         seen_text = []
 
-        def fake_synthesizer(text: str) -> bytes:
+        def fake_synthesizer(text: str) -> tuple:
             seen_text.append(text)
-            return f"audio:{len(seen_text)}".encode("utf-8")
+            return (f"audio:{len(seen_text)}".encode("utf-8"), [])
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             output_dir = Path(tmp_dir) / "audio"
@@ -97,6 +97,7 @@ class SynthesizeEntriesTests(unittest.TestCase):
                 output_dir=output_dir,
                 synthesize=fake_synthesizer,
                 overwrite=False,
+                write_srt=False,
             )
 
             self.assertEqual(seen_text, ["first", "second"])
@@ -113,7 +114,7 @@ class SynthesizeEntriesTests(unittest.TestCase):
     def test_skips_existing_files_without_overwrite(self) -> None:
         module = load_module()
 
-        def fail_synthesizer(text: str) -> bytes:
+        def fail_synthesizer(text: str) -> tuple:
             raise AssertionError(f"should not synthesize: {text}")
 
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -127,6 +128,7 @@ class SynthesizeEntriesTests(unittest.TestCase):
                 output_dir=output_dir,
                 synthesize=fail_synthesizer,
                 overwrite=False,
+                write_srt=False,
             )
 
             self.assertEqual(manifest, [existing])
