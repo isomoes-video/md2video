@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多智能体协同模式：五种模式与适用场景</title>
+
+  <!-- Reveal.js core -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <section id="title" class="section-divider hero-slide" data-state="is-section-divider">
+        <p class="eyebrow">CLAUDE BLOG / APR 2026 / CHINESE EDITION</p>
+        <h1>多智能体协同模式</h1>
+        <p class="hero-kicker text-xl">五种模式、各自代价，以及什么时候该从一种模式演进到下一种。</p>
+        <div class="hero-tags">
+          <p>Generator-Verifier</p>
+          <p>Orchestrator-Subagent</p>
+          <p>Agent Teams</p>
+          <p>Message Bus</p>
+          <p>Shared State</p>
+        </div>
+      </section>
+
+      <section id="slide-2">
+        <h2>不要从“更高级”开始，而要从“最简单能跑”开始</h2>
+        <div class="content">
+          <div class="question-grid">
+            <div class="question-card accent-card">
+              <p class="card-kicker">Q1</p>
+              <h3>验证标准明确吗？</h3>
+              <p>如果输出好坏可以被清楚检查，先考虑生成器-验证器。</p>
+            </div>
+            <div class="question-card">
+              <p class="card-kicker">Q2</p>
+              <h3>任务能清楚拆分吗？</h3>
+              <p>如果子任务边界清楚且依赖少，协调者-子代理通常最省心。</p>
+            </div>
+            <div class="question-card">
+              <p class="card-kicker">Q3</p>
+              <h3>工作要长期并行吗？</h3>
+              <p>如果 worker 需要长期保留上下文，再看 agent teams。</p>
+            </div>
+            <div class="question-card">
+              <p class="card-kicker">Q4</p>
+              <h3>信息靠事件流动还是靠知识积累？</h3>
+              <p>前者偏 message bus，后者偏 shared state。</p>
+            </div>
+          </div>
+          <div class="signal-band">
+            <p class="text-xl"><strong>文章的核心建议：</strong>先用最简单的模式，看它卡在哪里，再按真实瓶颈演进，而不是为“架构感”过度设计。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="slide-3">
+        <h2>模式 1：生成器-验证器适合“质量关键且可检查”的输出</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 1.02fr 0.98fr; gap: 22px; align-items: stretch;">
+            <div class="panel">
+              <p class="panel-label">HOW IT WORKS</p>
+              <div class="flow-row">
+                <div class="flow-pill"><p>生成初稿</p></div>
+                <div class="flow-arrow"><p><i class="fa-solid fa-arrow-right"></i></p></div>
+                <div class="flow-pill"><p>验证标准</p></div>
+                <div class="flow-arrow"><p><i class="fa-solid fa-arrow-right"></i></p></div>
+                <div class="flow-pill accent-card"><p>反馈重试</p></div>
+              </div>
+              <ul>
+                <li>生成器先产出初始结果</li>
+                <li>验证器按明确标准检查是否通过</li>
+                <li>不过关就带着具体反馈回到下一轮</li>
+              </ul>
+            </div>
+            <div class="stack-col">
+              <div class="mini-panel success-panel">
+                <p class="panel-label">适合场景</p>
+                <p>代码生成配测试、事实核查、合规审查、评分 rubric。</p>
+              </div>
+              <div class="mini-panel warning-panel">
+                <p class="panel-label">主要风险</p>
+                <p>验证标准模糊会变成“形式上的质控”；循环太久还会不收敛。</p>
+              </div>
+              <div class="mini-panel quote-panel">
+                <p>关键不是有没有 verifier，而是 <strong>verification 到底具体意味着什么</strong>。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="slide-4">
+        <h2>模式 2：协调者-子代理适合“边界清楚、输出明确”的任务拆分</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 22px; align-items: stretch;">
+            <div class="panel panel-dark">
+              <p class="panel-label">MENTAL MODEL</p>
+              <p class="text-lg">一个 lead agent 负责规划、分派、汇总；子代理只处理自己那一小块，并把蒸馏结果带回来。</p>
+              <div class="team-stack">
+                <div class="team-lead"><p>Orchestrator</p></div>
+                <div class="team-workers">
+                  <div class="team-worker"><p>安全检查</p></div>
+                  <div class="team-worker"><p>测试覆盖</p></div>
+                  <div class="team-worker"><p>风格一致性</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="stack-col">
+              <div class="mini-panel">
+                <p class="panel-label">为什么常用</p>
+                <ul>
+                  <li>主代理保留全局目标</li>
+                  <li>子代理上下文更聚焦</li>
+                  <li>很适合代码审查、资料搜集、独立检查项</li>
+                </ul>
+              </div>
+              <div class="mini-panel warning-panel">
+                <p class="panel-label">卡点</p>
+                <ul>
+                  <li>信息必须回到 orchestrator 再转发，容易丢细节</li>
+                  <li>不做并行时，成本上去了，速度却没提升</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="slide-5">
+        <h2>模式 3：Agent Teams 适合“可独立并行、且需要持续上下文”的长期工作</h2>
+        <div class="content">
+          <div class="card-grid three-up">
+            <div class="pattern-card accent-card">
+              <p class="card-kicker">核心差异</p>
+              <h3>Worker 是持续存在的</h3>
+              <p>不是做完一次就销毁，而是跨多次任务保留熟悉度与领域记忆。</p>
+            </div>
+            <div class="pattern-card">
+              <p class="card-kicker">典型例子</p>
+              <h3>大规模代码迁移</h3>
+              <p>每个 teammate 负责一个服务，连续处理依赖、代码、测试和验证。</p>
+            </div>
+            <div class="pattern-card">
+              <p class="card-kicker">隐性成本</p>
+              <h3>冲突与完成检测更难</h3>
+              <p>不同 worker 完成时间不同，共享代码库时还可能互相踩文件。</p>
+            </div>
+          </div>
+          <div class="signal-band alt-band">
+            <p><strong>判断点：</strong>如果子任务需要“长期熟悉自己的那块领域”，一次性 subagent 往往不够，team 模式才会开始显出价值。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="slide-6">
+        <h2>模式 4：Message Bus 适合“事件驱动、生态会不断长大”的系统</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 22px; align-items: stretch;">
+            <div class="panel">
+              <p class="panel-label">PUBLISH / SUBSCRIBE</p>
+              <div class="bus-grid">
+                <div class="bus-node"><p>告警进入</p></div>
+                <div class="bus-node accent-card"><p>Router / Topic</p></div>
+                <div class="bus-node"><p>网络调查</p></div>
+                <div class="bus-node"><p>身份分析</p></div>
+                <div class="bus-node"><p>上下文补充</p></div>
+                <div class="bus-node"><p>响应协调</p></div>
+              </div>
+              <p>代理不再彼此硬编码连接，而是围绕 topic 订阅与发布事件。</p>
+            </div>
+            <div class="stack-col">
+              <div class="mini-panel success-panel">
+                <p class="panel-label">适合场景</p>
+                <p>安全运营、异步工作流、能力会持续新增的 agent pipeline。</p>
+              </div>
+              <div class="mini-panel warning-panel">
+                <p class="panel-label">主要风险</p>
+                <p>路由错误常常是“静默失败”；调试时需要很强的日志和关联追踪。</p>
+              </div>
+              <div class="mini-panel">
+                <p class="panel-label">何时值得上</p>
+                <p>当 orchestrator 里塞满条件分支，且新事件类型越来越多时。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="slide-7">
+        <h2>模式 5：Shared State 适合“彼此研究成果要实时互相影响”的协作探索</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; align-items: stretch;">
+            <div class="panel panel-soft">
+              <p class="panel-label">HOW IT WORKS</p>
+              <ul>
+                <li>没有中心协调者，所有代理直接读写共享存储</li>
+                <li>一个代理的新发现，会马上变成另一个代理的输入</li>
+                <li>共享库会逐步长成一个不断更新的知识底座</li>
+              </ul>
+            </div>
+            <div class="panel panel-strong">
+              <p class="panel-label">WHAT CAN GO WRONG</p>
+              <ul>
+                <li>重复研究同一条线索</li>
+                <li>互相触发的 reactive loops 持续烧 token</li>
+                <li>没有终止条件时，很难判断什么时候“已经足够好”</li>
+              </ul>
+            </div>
+          </div>
+          <div class="research-strip">
+            <div class="research-dot"><p>论文</p></div>
+            <div class="research-dot"><p>行业</p></div>
+            <div class="research-dot"><p>专利</p></div>
+            <div class="research-dot"><p>新闻</p></div>
+            <div class="research-center"><p>共享知识库</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="slide-8">
+        <h2>如何选择：四组最容易混淆的分界线</h2>
+        <div class="content">
+          <div class="decision-list">
+            <div class="decision-row">
+              <p class="decision-left">协调者-子代理 vs Agent Teams</p>
+              <p class="decision-right">看 worker 需不需要跨多轮保留上下文。</p>
+            </div>
+            <div class="decision-row">
+              <p class="decision-left">协调者-子代理 vs Message Bus</p>
+              <p class="decision-right">看流程是预先已知，还是由事件动态长出来。</p>
+            </div>
+            <div class="decision-row">
+              <p class="decision-left">Agent Teams vs Shared State</p>
+              <p class="decision-right">看成员之间是否需要实时共享中间发现。</p>
+            </div>
+            <div class="decision-row accent-row">
+              <p class="decision-left">Message Bus vs Shared State</p>
+              <p class="decision-right">看系统是在传递离散事件，还是在共同累积知识库。</p>
+            </div>
+          </div>
+          <blockquote>
+            <p>文章背后的统一原则是 <strong>context-centric decomposition</strong>：按每个 agent 需要什么上下文来拆，不要只按职能名字来拆。</p>
+          </blockquote>
+        </div>
+      </section>
+
+      <section id="slide-9">
+        <h2>推荐的演进路径：从一个可控核心出发，再按瓶颈加复杂度</h2>
+        <div class="content">
+          <div class="timeline-grid">
+            <div class="timeline-step"><p class="timeline-no">1</p><p>先从 <strong>Orchestrator-Subagent</strong> 开始，覆盖大多数问题。</p></div>
+            <div class="timeline-step"><p class="timeline-no">2</p><p>如果质量风险高，再局部加 <strong>Generator-Verifier</strong>。</p></div>
+            <div class="timeline-step"><p class="timeline-no">3</p><p>如果 worker 需要长期自治，就演进成 <strong>Agent Teams</strong>。</p></div>
+            <div class="timeline-step"><p class="timeline-no">4</p><p>如果系统靠事件扩张或知识共建，再分别转向 <strong>Message Bus</strong> 或 <strong>Shared State</strong>。</p></div>
+          </div>
+          <div class="hybrid-grid">
+            <div class="hybrid-card">
+              <p class="panel-label">常见混搭 A</p>
+              <p>整体流程用 orchestrator，某个协作密集子任务内部用 shared state。</p>
+            </div>
+            <div class="hybrid-card accent-card">
+              <p class="panel-label">常见混搭 B</p>
+              <p>事件路由用 message bus，每类事件后面接 team-style workers 持续处理。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="slide-10">
+        <h2>最后一页：把模式当作积木，不要把它们当作信仰</h2>
+        <div class="content">
+          <div class="card-grid five-up compact-cards">
+            <div class="summary-card"><p class="summary-name">Generator-Verifier</p><p>质量关键</p></div>
+            <div class="summary-card"><p class="summary-name">Orchestrator-Subagent</p><p>清晰拆分</p></div>
+            <div class="summary-card"><p class="summary-name">Agent Teams</p><p>长期并行</p></div>
+            <div class="summary-card"><p class="summary-name">Message Bus</p><p>事件驱动</p></div>
+            <div class="summary-card accent-card"><p class="summary-name">Shared State</p><p>协作发现</p></div>
+          </div>
+          <div class="closing-band">
+            <p class="text-2xl">默认起点不是“最酷的架构”，而是 <strong>最简单、最可观测、最容易验证的那一个</strong>。真正的升级，应该由瓶颈触发，而不是由想象触发。</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js-plugins@latest/chart/plugin.js"></script>
+  <script>
+    Reveal.initialize({
+      width: 1280,
+      height: 720,
+      margin: 0,
+      controls: true,
+      progress: true,
+      slideNumber: true,
+      hash: true,
+      transition: 'slide',
+      center: false,
+      plugins: [ RevealChart ],
+      chart: {
+        defaults: Object.assign({
+          color: 'rgba(0, 0, 0, 0.8)',
+          borderColor: 'rgba(0, 0, 0, 0.8)',
+          devicePixelRatio: 2
+        }, window.location.search.includes('export') ? { animation: false } : {})
+      }
+    });
+  </script>
+</body>
+</html>
