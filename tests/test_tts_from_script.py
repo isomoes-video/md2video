@@ -1,8 +1,10 @@
 import importlib.util
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 def load_module():
@@ -73,9 +75,50 @@ class ParseArgsTests(unittest.TestCase):
             module.DEFAULT_SCRIPT,
             Path("output/tools-keyboard-first-workflow/script.json"),
         )
-        self.assertEqual(module.DEFAULT_MODEL, "cosyvoice-v3-flash")
-        self.assertEqual(module.DEFAULT_VOICE, "longanyang")
+        self.assertEqual(module.DEFAULT_DASHSCOPE_MODEL, "cosyvoice-v3-flash")
+        self.assertEqual(module.DEFAULT_DASHSCOPE_VOICE, "longanyang")
+        self.assertEqual(module.DEFAULT_OPENAI_MODEL, "gpt-4o-mini-tts")
+        self.assertEqual(module.DEFAULT_OPENAI_VOICE, "coral")
         self.assertEqual(args.voice, "override-voice")
+        self.assertEqual(args.provider, "auto")
+
+
+class ProviderResolutionTests(unittest.TestCase):
+    def test_auto_prefers_dashscope_when_available(self) -> None:
+        module = load_module()
+
+        with mock.patch.dict(
+            os.environ,
+            {"DASHSCOPE_API_KEY": "dash-key", "OPENAI_API_KEY": "open-key"},
+            clear=False,
+        ):
+            provider, api_key = module.resolve_provider_and_api_key("auto")
+
+        self.assertEqual((provider, api_key), ("dashscope", "dash-key"))
+
+    def test_auto_uses_openai_when_dashscope_missing(self) -> None:
+        module = load_module()
+
+        with mock.patch.dict(
+            os.environ,
+            {"OPENAI_API_KEY": "open-key"},
+            clear=True,
+        ):
+            provider, api_key = module.resolve_provider_and_api_key("auto")
+
+        self.assertEqual((provider, api_key), ("openai", "open-key"))
+
+    def test_provider_specific_defaults_follow_provider(self) -> None:
+        module = load_module()
+
+        self.assertEqual(
+            module.resolve_model_and_voice("dashscope", None, None),
+            ("cosyvoice-v3-flash", "longanyang"),
+        )
+        self.assertEqual(
+            module.resolve_model_and_voice("openai", None, None),
+            ("gpt-4o-mini-tts", "coral"),
+        )
 
 
 class SynthesizeEntriesTests(unittest.TestCase):

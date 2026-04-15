@@ -5,7 +5,8 @@ You are generating narration audio from approved script content.
 ## Goals
 
 - Read `output/<presentation-slug>/script.json`.
-- Use DashScope TTS with `DASHSCOPE_API_KEY`.
+- Use the existing `scripts/tts_from_script.py` script — do not rewrite it.
+- Support either DashScope TTS with `DASHSCOPE_API_KEY` or OpenAI TTS with `OPENAI_API_KEY`.
 - Use the existing `scripts/tts_from_script.py` script — do not rewrite it.
 - Generate one mp3 **and one srt** per slide into `output/<presentation-slug>/audio/`.
 - Keep file names aligned with slide numbers.
@@ -30,21 +31,35 @@ Run the existing script with `uv run`:
 uv run scripts/tts_from_script.py --script output/<presentation-slug>/script.json
 ```
 
-This will:
+By default the script auto-detects the provider:
+
+- If `DASHSCOPE_API_KEY` is set, it uses DashScope first.
+- Otherwise, if `OPENAI_API_KEY` is set, it uses OpenAI.
+- You can override this with `--provider dashscope` or `--provider openai`.
+
+DashScope mode will:
 1. Call the DashScope CosyVoice TTS API with `word_timestamp_enabled: true`.
 2. Write `slide-XX.mp3` files to `output/<presentation-slug>/audio/`.
-3. Write `slide-XX.srt` files to the same `audio/` directory (character-level timestamps from the API).
+3. Write `slide-XX.srt` files to the same `audio/` directory.
+
+OpenAI mode will:
+1. Call the OpenAI `audio/speech` API.
+2. Write `slide-XX.mp3` files to `output/<presentation-slug>/audio/`.
+3. Skip SRT generation in the current workflow, even if `--no-srt` is not set.
 
 **Key CLI flags:**
 - `--script` — path to `script.json` (required unless default matches).
+- `--provider {auto,dashscope,openai}` — choose or auto-detect the TTS backend.
 - `--overwrite` — re-synthesize and overwrite existing mp3/srt files.
 - `--no-srt` — skip SRT generation (use only when subtitles are not needed).
-- `--voice` / `--model` — override the default voice (`longanyang`) and model (`cosyvoice-v3-flash`).
+- `--voice` / `--model` — override provider-specific defaults.
+- `--instructions` — optional OpenAI-only speaking instructions such as pacing or tone.
 
 ## Implementation notes (for reference only)
 
 - The script uses `dashscope.audio.tts_v2.SpeechSynthesizer` in streaming callback mode.
 - `word_timestamp_enabled` is passed in `additional_params` so the server returns per-character `begin_time`/`end_time` (milliseconds) in `result-generated` events.
 - A fresh synthesizer is created per narration to satisfy the SDK connection lifecycle.
-- Fails clearly when `DASHSCOPE_API_KEY` is missing or the TTS API returns no audio.
+- OpenAI mode uses the official `audio/speech` endpoint and currently returns MP3 only in this workflow.
+- Fails clearly when no provider credentials are present or the TTS API returns no audio.
 - Uses the Beijing DashScope WebSocket endpoint (`wss://dashscope.aliyuncs.com/api-ws/v1/inference`) by default.
