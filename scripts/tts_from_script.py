@@ -2,6 +2,7 @@
 # /// script
 # dependencies = [
 #   "dashscope>=1.24.6",
+#   "openai>=1.109.0",
 # ]
 # ///
 
@@ -11,12 +12,17 @@ import argparse
 import json
 import os
 import threading
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any, Callable
 
 
-DEFAULT_MODEL = "cosyvoice-v3-flash"
-DEFAULT_VOICE = "longanyang"
+DEFAULT_PROVIDER = "auto"
+DEFAULT_DASHSCOPE_MODEL = "cosyvoice-v3-flash"
+DEFAULT_DASHSCOPE_VOICE = "longanyang"
+DEFAULT_OPENAI_MODEL = "gpt-4o-mini-tts"
+DEFAULT_OPENAI_VOICE = "coral"
 DEFAULT_SCRIPT = Path("output/tools-keyboard-first-workflow/script.json")
 DEFAULT_BASE_WEBSOCKET_API_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
 
@@ -246,6 +252,57 @@ def make_dashscope_synthesizer(
     return synthesize
 
 
+def make_openai_synthesizer(
+    model: str,
+    voice: str,
+    api_key: str,
+    instructions: str | None = None,
+    response_format: str = "mp3",
+) -> Callable[[str], tuple[bytes, list[dict[str, Any]]]]:
+    """Return a synthesize(text) callable backed by OpenAI's audio/speech API."""
+
+    endpoint = "https://api.openai.com/v1/audio/speech"
+
+    def synthesize(text: str) -> tuple[bytes, list[dict[str, Any]]]:
+        payload: dict[str, Any] = {
+            "model": model,
+            "voice": voice,
+            "input": text,
+            "response_format": response_format,
+        }
+        if instructions:
+            payload["instructions"] = instructions
+
+        request = urllib.request.Request(
+            endpoint,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(request) as response:
+                audio = response.read()
+        except urllib.error.HTTPError as exc:
+            details = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(
+                f"OpenAI TTS request failed with status {exc.code}: {details}"
+            ) from exc
+        except urllib.error.URLError as exc:
+            raise RuntimeError(f"OpenAI TTS request failed: {exc.reason}") from exc
+
+        if not audio:
+            raise RuntimeError(
+                f"OpenAI TTS returned no audio for model={model!r} voice={voice!r}"
+            )
+        return audio, []
+
+    return synthesize
+
+
 def synthesize_script_entries(
     entries: list[dict[str, Any]],
     output_dir: Path,
@@ -302,14 +359,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Directory for generated MP3 files. Defaults to an audio/ folder next to script.json.",
     )
     parser.add_argument(
+        "--provider",
+        choices=["auto", "dashscope", "openai"],
+        default=DEFAULT_PROVIDER,
+        help="TTS provider to use. Defaults to auto-detect from environment variables.",
+    )
+    parser.add_argument(
         "--model",
-        default=DEFAULT_MODEL,
-        help="DashScope TTS model.",
+        help="Override the provider-specific TTS model.",
     )
     parser.add_argument(
         "--voice",
-        default=DEFAULT_VOICE,
-        help="DashScope voice name or custom voice id.",
+        help="Override the provider-specific voice name.",
     )
     parser.add_argument(
         "--base-websocket-api-url",
@@ -326,27 +387,77 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Skip SRT subtitle file generation (enabled by default).",
     )
+    parser.add_argument(
+        "--instructions",
+        help="Optional OpenAI TTS speaking instructions, such as tone or pacing.",
+    )
     return parser.parse_args(argv)
+
+
+def resolve_provider_and_api_key(provider: str) -> tuple[str, str]:
+    dashscope_api_key = os.getenv("DASHSCOPE_API_KEY")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    if provider == "dashscope":
+        if not dashscope_api_key:
+            raise SystemExit("DASHSCOPE_API_KEY is required when --provider=dashscope")
+        return provider, dashscope_api_key
+
+    if provider == "openai":
+        if not openai_api_key:
+            raise SystemExit("OPENAI_API_KEY is required when --provider=openai")
+        return provider, openai_api_key
+
+    if dashscope_api_key:
+        return "dashscope", dashscope_api_key
+    if openai_api_key:
+        return "openai", openai_api_key
+
+    raise SystemExit(
+        "No TTS credentials found. Set DASHSCOPE_API_KEY or OPENAI_API_KEY, "
+        "or pass --provider explicitly."
+    )
+
+
+def resolve_model_and_voice(
+    provider: str, model: str | None, voice: str | None
+) -> tuple[str, str]:
+    if provider == "dashscope":
+        return model or DEFAULT_DASHSCOPE_MODEL, voice or DEFAULT_DASHSCOPE_VOICE
+    return model or DEFAULT_OPENAI_MODEL, voice or DEFAULT_OPENAI_VOICE
 
 
 def main() -> int:
     args = parse_args()
-    api_key = os.getenv("DASHSCOPE_API_KEY")
-    if not api_key:
-        raise SystemExit("DASHSCOPE_API_KEY is required")
-
+    provider, api_key = resolve_provider_and_api_key(args.provider)
+    model, voice = resolve_model_and_voice(provider, args.model, args.voice)
     write_srt = not args.no_srt
 
     script_path = args.script.resolve()
     entries = load_script_entries(script_path)
     output_dir = resolve_output_dir(script_path, args.output_dir)
-    synthesize = make_dashscope_synthesizer(
-        model=args.model,
-        voice=args.voice,
-        api_key=api_key,
-        base_websocket_api_url=args.base_websocket_api_url,
-        enable_timestamps=write_srt,
-    )
+
+    if provider == "dashscope":
+        synthesize = make_dashscope_synthesizer(
+            model=model,
+            voice=voice,
+            api_key=api_key,
+            base_websocket_api_url=args.base_websocket_api_url,
+            enable_timestamps=write_srt,
+        )
+    else:
+        if write_srt:
+            print(
+                "warning: OpenAI TTS currently writes MP3 only in this workflow; "
+                "SRT generation is skipped. Use --no-srt to silence this warning."
+            )
+        synthesize = make_openai_synthesizer(
+            model=model,
+            voice=voice,
+            api_key=api_key,
+            instructions=args.instructions,
+        )
+
     written_files = synthesize_script_entries(
         entries=entries,
         output_dir=output_dir,
