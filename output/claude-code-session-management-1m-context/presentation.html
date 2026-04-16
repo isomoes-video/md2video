@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 Claude Code：会话管理与 1M 上下文</title>
+
+  <!-- Reveal.js core -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <section id="title" class="section-divider hero-slide" data-state="is-section-divider">
+        <p class="eyebrow">CLAUDE CODE / 会话管理 / 1M 上下文</p>
+        <h1>使用 Claude Code：会话管理与 1M 上下文</h1>
+        <p class="hero-kicker text-xl">这篇文章的核心信息很简单：更好的结果来自于在恰当时机选择恰当的上下文控制方式。</p>
+        <div class="hero-meta-row">
+          <p class="hero-meta">继续</p>
+          <p class="hero-meta">回退</p>
+          <p class="hero-meta">压缩</p>
+          <p class="hero-meta">清空</p>
+          <p class="hero-meta">Subagent</p>
+        </div>
+      </section>
+
+      <section id="slide-2">
+        <h2>基础概念：上下文既是能力来源，也会带来负担</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 24px; align-items: stretch;">
+            <div class="panel panel-soft">
+              <p class="panel-label">窗口里都有什么</p>
+              <ul>
+                <li>系统提示词、对话历史、工具调用、工具输出，以及文件读取记录</li>
+                <li>Claude Code 现在提供 <strong>100 万 token</strong> 的上下文窗口</li>
+                <li>更长的任务成为可能，但注意力仍然需要被主动管理</li>
+              </ul>
+            </div>
+            <div class="stacked-column">
+              <div class="mini-card accent-card">
+                 <p class="mini-kicker">上下文腐化</p>
+                 <p>随着窗口变大，陈旧且无关的细节会争夺注意力，整体表现也会逐渐漂移。</p>
+              </div>
+              <div class="mini-card">
+                 <p class="mini-kicker">压缩</p>
+                 <p>接近上限时，Claude 会把当前会话总结成更短的交接摘要，并从该摘要继续。</p>
+              </div>
+            </div>
+          </div>
+          <div class="signal-strip">
+             <p><strong>关键转变：</strong>更大的窗口只是给你更多空间，并不意味着所有任务都可以永远塞在同一条线程里。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="divider-1" class="section-divider chapter-divider" data-state="is-section-divider">
+        <p class="eyebrow">第 01 部分</p>
+        <h1>每一轮回复都是一个分叉点</h1>
+        <p>每次回答之后，都要决定是保留上下文、压缩它、重写它，还是把下一项任务隔离出去。</p>
+      </section>
+
+      <section>
+        <section id="slide-4-1">
+          <h2>选项 1：当同一份上下文仍然关键时，继续</h2>
+          <div class="content">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch;">
+              <div class="feature-card">
+                <p class="feature-icon"><i class="fa-solid fa-link"></i></p>
+                 <h3>同一个任务</h3>
+                 <p>当前目标没有变化，前面的工作仍然直接相关。</p>
+              </div>
+              <div class="feature-card">
+                <p class="feature-icon"><i class="fa-solid fa-file-code"></i></p>
+                 <h3>已读取的文件仍有价值</h3>
+                 <p>Claude 已经加载了你接下来还需要的那些文件，重新开始只会把同样的状态再建一遍。</p>
+              </div>
+              <div class="feature-card accent-border">
+                <p class="feature-icon"><i class="fa-solid fa-forward"></i></p>
+                 <h3>阻力最小</h3>
+                 <p>如果当前会话状态健康，继续就是最快、成本最低的推进方式。</p>
+              </div>
+            </div>
+            <blockquote>
+               <p>Anthropic 的经验法则是：如果你真正开始了一个新任务，就同时开启一个新会话。否则，只有在当前上下文仍然有帮助时才继续。</p>
+            </blockquote>
+          </div>
+        </section>
+        <section id="slide-4-2">
+          <h2>选项 2：与其在错误路径上纠缠，不如回退</h2>
+          <div class="content">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: stretch;">
+              <div class="panel panel-strong">
+                 <p class="panel-label">在这些情况下使用 `/rewind` 或双击 Esc</p>
+                <ul>
+                   <li>Claude 探索了一条失败的方案</li>
+                   <li>读取文件这一步是有用的，但尝试的修复方式不对</li>
+                   <li>你希望从对话里一个更干净的分叉点重新提示</li>
+                </ul>
+              </div>
+              <div class="panel panel-dark">
+                 <p class="panel-label">为什么有效</p>
+                 <p class="text-lg">你可以保留好的准备工作，丢掉嘈杂的绕路过程，而不是在一个错误分支上不断叠加修正。</p>
+              </div>
+            </div>
+            <div class="quote-panel">
+               <p class="text-xl">更好的提示方式：<strong>“不要使用方案 A。这个模块并没有暴露那个 API。直接走方案 B。”</strong></p>
+            </div>
+          </div>
+        </section>
+        <section id="slide-4-3">
+          <h2>选项 3：用 compact 还是 clear，取决于由谁决定保留什么</h2>
+          <div class="content">
+            <div class="compare-grid">
+              <div class="compare-card">
+                 <p class="compare-kicker">`/compact`</p>
+                 <h3>由 Claude 编写摘要</h3>
+                <ul>
+                   <li>更快，所需投入更少</li>
+                   <li>适合在任务中途保持推进节奏</li>
+                   <li>可以通过提示引导，比如保留认证部分、丢掉测试调试过程</li>
+                </ul>
+              </div>
+              <div class="compare-card compare-card-alt">
+                 <p class="compare-kicker">`/clear`</p>
+                 <h3>由你编写新的任务说明</h3>
+                <ul>
+                   <li>最适合任务已经真正改变时使用</li>
+                   <li>由你精确控制哪些约束和文件需要继续保留</li>
+                   <li>更费力，但不会带上意外包袱</li>
+                </ul>
+              </div>
+            </div>
+            <div class="signal-strip alt">
+               <p><strong>Compact 保留连续性。</strong> <strong>Clear 保留主动选择权。</strong> 正确的选择取决于谁来决定下一步什么最重要。</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section id="divider-2" class="section-divider chapter-divider" data-state="is-section-divider">
+        <p class="eyebrow">第 02 部分</p>
+        <h1>有意识地获得全新上下文</h1>
+        <p>自动压缩可能会漏掉支线内容，所以要在高噪音工作污染主会话之前，主动把它隔离出去。</p>
+      </section>
+
+      <section>
+        <section id="slide-6-1">
+          <h2>什么会导致糟糕的自动压缩？</h2>
+          <div class="content">
+            <div style="display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 24px; align-items: stretch;">
+              <div class="stacked-steps">
+                 <div class="step-card"><p class="step-title">1. 漫长的调试路径</p><p>整个会话被某一条调查主线主导。</p></div>
+                 <div class="step-card"><p class="step-title">2. 自动摘要</p><p>Claude 会压缩这条主线中看起来最相关的内容。</p></div>
+                 <div class="step-card caution"><p class="step-title">3. 任务切换</p><p>你的下一条提示突然跳到另一个警告或边缘问题。</p></div>
+              </div>
+              <div class="panel panel-soft">
+                 <p class="panel-label">失败模式</p>
+                 <p class="text-lg">由于压缩发生时窗口往往已经很拥挤，优先级较低的细节就可能从摘要里掉出去。文章提到的正是这种模式：由于会话一直在关注别的事情，<strong>bar.ts</strong> 里的警告信息就消失了。</p>
+              </div>
+            </div>
+            <blockquote>
+               <p>有了 1M 上下文，你就有更多时间提前执行压缩，并明确告诉 Claude 下一阶段应该保留什么。</p>
+            </blockquote>
+          </div>
+        </section>
+        <section id="slide-6-2">
+          <h2>Subagent 是处理高噪音工作的“洁净室”方案</h2>
+          <div class="content">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; align-items: stretch;">
+              <div class="panel panel-dark">
+                 <p class="panel-label">在这些情况下使用 subagent</p>
+                <ul>
+                   <li>下一步会产生大量中间输出</li>
+                   <li>你只需要把结论带回主会话</li>
+                   <li>这项工作天然适合拆开，比如验证、代码库搜索、文档撰写</li>
+                </ul>
+              </div>
+              <div class="panel panel-strong">
+                 <p class="panel-label">Anthropic 的判断问题</p>
+                 <p class="text-2xl">我之后还需要这些工具输出吗，还是只需要结论？</p>
+                 <p>如果答案只是结论，那就把它隔离到 subagent 里。</p>
+              </div>
+            </div>
+            <div class="chip-cloud">
+               <p class="chip">验证</p>
+               <p class="chip">跨仓库阅读</p>
+               <p class="chip">文档起草</p>
+               <p class="chip">高噪音搜索</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section id="slide-7">
+        <h2>决策表：什么时刻该用什么控制方式？</h2>
+        <div class="content">
+          <div class="decision-table-wrap">
+            <table class="decision-table">
+              <thead>
+                <tr>
+                  <th>情境</th>
+                  <th>优先选择</th>
+                  <th>原因</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>还是同一个任务，上下文仍然相关</td>
+                  <td><strong>Continue</strong></td>
+                  <td>不要为重建有用状态付出额外成本。</td>
+                </tr>
+                <tr>
+                  <td>Claude 走错了路径</td>
+                  <td><strong>Rewind</strong></td>
+                  <td>保留有价值的读取结果，丢掉失败分支。</td>
+                </tr>
+                <tr>
+                  <td>任务进行中，会话已经臃肿</td>
+                  <td><strong>`/compact`</strong></td>
+                  <td>快速甩掉陈旧上下文，同时保持推进节奏。</td>
+                </tr>
+                <tr>
+                  <td>你开始了一个新任务</td>
+                  <td><strong>`/clear`</strong></td>
+                  <td>清除上下文腐化，只保留你明确选择继续携带的内容。</td>
+                </tr>
+                <tr>
+                  <td>下一步会很嘈杂，但你只关心结果</td>
+                  <td><strong>Subagent</strong></td>
+                  <td>把工具噪音隔离在主线程之外。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="conclusion-band">
+             <p class="text-xl">用一句话概括这篇文章：<strong>管理的是上下文的形状，而不只是上下文的大小。</strong></p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js-plugins@latest/chart/plugin.js"></script>
+  <script>
+    Reveal.initialize({
+      width: 1280,
+      height: 720,
+      margin: 0,
+      controls: true,
+      progress: true,
+      slideNumber: true,
+      hash: true,
+      transition: 'slide',
+      center: false,
+      plugins: [ RevealChart ],
+      chart: {
+        defaults: Object.assign({
+          color: 'rgba(0, 0, 0, 0.8)',
+          borderColor: 'rgba(0, 0, 0, 0.8)',
+          devicePixelRatio: 2
+        }, window.location.search.includes('export') ? { animation: false } : {})
+      }
+    });
+  </script>
+</body>
+</html>
