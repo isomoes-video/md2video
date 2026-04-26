@@ -10,7 +10,7 @@ You are assembling the final narrated video.
 - Add a very short default pause between slides so slide transitions do not feel abrupt.
 - Build a video where each slide image stays visible for the full duration of its narration audio.
 - Concatenate all slide segments in slide order into one final video.
-- Embed subtitles when `slide-XX.srt` files are present in the `audio/` directory.
+- Burn subtitles into the video by default when `slide-XX.srt` files are present in the `audio/` directory.
 
 ## Input contract
 
@@ -31,19 +31,19 @@ You are assembling the final narrated video.
 Run the existing script with `uv run`:
 
 ```bash
-# No subtitles (default, backward-compatible)
-uv run scripts/combine_video.py --pdf output/<presentation-slug>/output.pdf
-
-# Burn subtitles into the video image (hard-coded, always visible)
+# Burn subtitles into the video image (default for this workflow, always visible)
 uv run scripts/combine_video.py --pdf output/<presentation-slug>/output.pdf --subtitles burn --overwrite
 
 # Embed subtitles as a soft/togglable track inside the MP4
 uv run scripts/combine_video.py --pdf output/<presentation-slug>/output.pdf --subtitles mux --overwrite
+
+# No subtitles
+uv run scripts/combine_video.py --pdf output/<presentation-slug>/output.pdf --subtitles none --overwrite
 ```
 
 **Key CLI flags:**
 - `--pdf` — path to `output.pdf`.
-- `--subtitles {none,burn,mux}` — subtitle handling when `slide-XX.srt` files exist (default: `none`).
+- `--subtitles {none,burn,mux}` — subtitle handling when `slide-XX.srt` files exist. Use `burn` by default in this workflow.
   - `none` — ignore SRT files.
   - `burn` — hard-code subtitles into each slide image via FFmpeg `subtitles=` filter.
   - `mux` — embed SRT as a soft subtitle track (`mov_text`) that players can toggle on/off.
