@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code 质量复盘</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section id="title" class="section-divider" data-state="is-section-divider">
+        <p class="eyebrow">Anthropic Engineering | 2026 年 4 月 23 日</p>
+        <h1>Claude Code 质量复盘</h1>
+        <p class="subtitle">三个产品层变更，如何叠加成“模型整体退化”的用户感受。</p>
+      </section>
+
+      <section id="headline">
+        <h2>先看结论</h2>
+        <div class="content">
+          <div class="headline-grid">
+            <div class="number-card">
+              <p class="number">3</p>
+              <p class="label">个独立变更</p>
+            </div>
+            <div class="number-card">
+              <p class="number">0</p>
+              <p class="label">API 或推理层影响</p>
+            </div>
+            <div class="number-card">
+              <p class="number">4 月 20 日</p>
+              <p class="label">问题全部修复</p>
+            </div>
+          </div>
+          <blockquote>
+            <p>不同流量切片、不同发布时间，最终汇成一个难以判断的质量信号。</p>
+          </blockquote>
+        </div>
+      </section>
+
+      <section id="timeline">
+        <h2>变更时间线</h2>
+        <div class="content">
+          <div class="timeline">
+            <div class="event">
+              <p class="date">3 月 4 日</p>
+              <p><strong>默认推理强度下调</strong>：从 high 改为 medium，以降低延迟。</p>
+            </div>
+            <div class="event">
+              <p class="date">3 月 26 日</p>
+              <p><strong>上线思考清理</strong>：面向长时间空闲会话，但错误地每轮都触发。</p>
+            </div>
+            <div class="event">
+              <p class="date">4 月 16 日</p>
+              <p><strong>加入简洁性提示词</strong>：之后被发现会降低编码质量。</p>
+            </div>
+            <div class="event fixed">
+              <p class="date">4 月 20 日</p>
+              <p><strong>最后一个回归被回滚</strong>；v2.1.116 中完成修复。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="effort">
+        <h2>问题一：推理强度默认值</h2>
+        <div class="content split">
+          <div class="panel">
+            <h3>初衷</h3>
+            <p>降低少数用户遇到的超长思考延迟，避免界面看起来像卡死。</p>
+          </div>
+          <div class="panel accent">
+            <h3>影响</h3>
+            <p>Medium 降低了延迟，但让用户在编码任务中感到能力下降。</p>
+          </div>
+        </div>
+        <p class="footnote">4 月 7 日已回滚：Opus 4.7 默认 xhigh，其他模型默认 high。</p>
+      </section>
+
+      <section id="thinking-cache">
+        <h2>问题二：历史思考被丢弃</h2>
+        <div class="content">
+          <div class="flow">
+            <div class="flow-step">
+              <p><i class="fa-solid fa-clock"></i></p>
+              <p><strong>空闲会话</strong></p>
+              <p>超过一小时后，本应只清理一次旧思考。</p>
+            </div>
+            <div class="arrow"><p><i class="fa-solid fa-arrow-right"></i></p></div>
+            <div class="flow-step warning">
+              <p><i class="fa-solid fa-rotate"></i></p>
+              <p><strong>错误标记</strong></p>
+              <p>清理逻辑变成每一轮都继续触发。</p>
+            </div>
+            <div class="arrow"><p><i class="fa-solid fa-arrow-right"></i></p></div>
+            <div class="flow-step danger">
+              <p><i class="fa-solid fa-brain"></i></p>
+              <p><strong>理由丢失</strong></p>
+              <p>Claude 变得像是健忘、重复、工具选择异常。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="verbosity">
+        <h2>问题三：过度限制输出长度</h2>
+        <div class="content">
+          <div class="quote-card">
+            <p>“工具调用之间的文本不超过 25 个词；除非任务需要更多细节，最终回复不超过 100 个词。”</p>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px;">
+            <div class="panel">
+              <h3>为什么会上线</h3>
+              <p>Opus 4.7 更容易冗长，而内部测试没有显示明显回归。</p>
+            </div>
+            <div class="panel accent">
+              <h3>后来发现什么</h3>
+              <p>更广泛的消融测试发现约 3% 下降，因此 4 月 20 日回滚。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="why-hard">
+        <h2>为什么难以定位</h2>
+        <div class="content">
+          <div class="cards">
+            <div class="card"><p><i class="fa-solid fa-layer-group"></i></p><p><strong>变更相互叠加</strong></p><p>每个变更影响的人群和时间窗口都不同。</p></div>
+            <div class="card"><p><i class="fa-solid fa-vial"></i></p><p><strong>评测没有覆盖</strong></p><p>初始内部使用和测试未能复现用户报告。</p></div>
+            <div class="card"><p><i class="fa-solid fa-bug"></i></p><p><strong>触发条件偏窄</strong></p><p>思考丢失问题依赖空闲会话和特定轮次模式。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="changes">
+        <h2>Anthropic 将如何改进</h2>
+        <div class="content">
+          <ul class="check-list">
+            <li><strong>更多内部员工使用公开版本</strong>，而不是只使用实验构建。</li>
+            <li><strong>增强代码审查</strong>，让评审工具能拿到更完整的仓库上下文。</li>
+            <li><strong>收紧提示词变更控制</strong>：按模型评测、消融分析、审计工具。</li>
+            <li><strong>更安全地发布智能权衡变更</strong>：观察期、更宽评测、渐进 rollout。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="takeaway" class="section-divider" data-state="is-section-divider">
+        <p class="eyebrow">核心教训</p>
+        <h1>质量是系统属性</h1>
+        <p class="subtitle">模型行为、产品默认值、上下文管理、提示词、评测和发布流程，都会共同塑造用户体验。</p>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      width: 1280,
+      height: 720,
+      margin: 0,
+      controls: true,
+      progress: true,
+      slideNumber: false,
+      hash: true,
+      transition: 'slide',
+      center: false
+    });
+  </script>
+</body>
+</html>

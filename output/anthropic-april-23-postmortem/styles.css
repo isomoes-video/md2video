@@ -1,0 +1,223 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap');
+
+:root {
+  --background-color: #111820;
+  --section-divider-bg: #0b1117;
+  --heading-font: "Noto Serif SC", "IBM Plex Serif", Georgia, serif;
+  --body-font: "Noto Sans SC", "IBM Plex Sans", Helvetica, sans-serif;
+  --base-font-size: 32px;
+  --text-size: 18pt;
+  --h1-size: 50pt;
+  --h2-size: 34pt;
+  --h3-size: 22pt;
+  --footnote-size: 11pt;
+  --primary-color: #f1b35b;
+  --secondary-color: #e65f4f;
+  --text-color: #f5efe4;
+  --muted-color: #aeb8bf;
+  --panel-bg: #182431;
+  --panel-bg-light: #f2e8d8;
+  --panel-text-dark: #13202a;
+  --line-color: rgba(241, 179, 91, 0.38);
+  --slide-padding: 64px;
+  --slide-padding-top: 48px;
+  --watermark-safe-top: 0px;
+  --content-gap: 28px;
+  --box-radius: 18px;
+}
+
+.reveal {
+  font-family: var(--body-font);
+  font-size: var(--base-font-size);
+}
+
+.reveal-viewport { background-color: var(--background-color); }
+.reveal-viewport.is-section-divider .slide-background.present { background-color: var(--section-divider-bg) !important; }
+
+.reveal strong,
+.reveal b { font-weight: 700; }
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+  color: var(--text-color);
+  font-family: var(--heading-font);
+  font-weight: 600;
+  line-height: 1.1;
+  margin: 0;
+  text-transform: none;
+}
+
+.reveal h1 { font-size: var(--h1-size); max-width: 980px; }
+.reveal h2 { font-size: var(--h2-size); border-bottom: 2px solid var(--line-color); padding-bottom: 15px; }
+.reveal h3 { font-size: var(--h3-size); color: var(--primary-color); margin-bottom: 8px; }
+
+.reveal p,
+.reveal li,
+.reveal blockquote {
+  color: var(--text-color);
+  font-size: var(--text-size);
+  line-height: 1.42;
+  margin: 0;
+}
+
+.reveal .slides section {
+  box-sizing: border-box;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100%;
+  padding: var(--slide-padding-top) var(--slide-padding) var(--slide-padding) var(--slide-padding) !important;
+  text-align: left;
+}
+
+.reveal .slides section > .content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: var(--content-gap);
+  text-align: left;
+}
+
+.reveal .slides section.section-divider {
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center;
+}
+
+.reveal .slides section.section-divider h1 { font-size: 56pt; text-align: center; }
+.subtitle { color: var(--muted-color) !important; font-size: 22pt !important; max-width: 900px; padding-top: 22px; text-align: center; }
+.eyebrow { color: var(--primary-color) !important; font-size: 14pt !important; font-weight: 700; letter-spacing: 0.16em; padding-bottom: 20px; text-transform: uppercase; }
+
+.headline-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.number-card,
+.panel,
+.card,
+.flow-step,
+.quote-card,
+.event {
+  background: var(--panel-bg);
+  border: 1px solid rgba(245, 239, 228, 0.1);
+  border-radius: var(--box-radius);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+}
+
+.number-card { padding: 30px 26px; text-align: center; }
+.number { color: var(--primary-color) !important; font-family: var(--heading-font); font-size: 42pt !important; font-weight: 600; line-height: 1; }
+.label { color: var(--muted-color) !important; font-size: 15pt !important; padding-top: 12px; }
+
+.reveal blockquote {
+  border-left: 6px solid var(--primary-color);
+  box-shadow: none;
+  margin: 34px auto 0 auto;
+  max-width: 880px;
+  padding: 6px 0 6px 24px;
+}
+
+.reveal blockquote p { color: var(--text-color); font-size: 24pt; font-style: italic; }
+
+.timeline {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(4, 1fr);
+  min-height: 390px;
+}
+
+.event {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px;
+}
+
+.event p { font-size: 16pt; }
+.event .date { color: var(--primary-color); font-size: 24pt; font-weight: 700; padding-bottom: 32px; }
+.event.fixed { background: #1f3a32; border-color: rgba(122, 207, 160, 0.45); }
+
+.split {
+  display: grid !important;
+  gap: 32px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.panel { padding: 34px; }
+.panel p { font-size: 22pt; }
+.panel.accent { background: var(--panel-bg-light); }
+.panel.accent h3 { color: #9d3e32; }
+.panel.accent p { color: var(--panel-text-dark); }
+
+.footnote {
+  bottom: 24px;
+  color: var(--muted-color) !important;
+  font-size: var(--footnote-size) !important;
+  left: var(--slide-padding);
+  position: absolute;
+  right: var(--slide-padding);
+}
+
+.flow {
+  align-items: stretch;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr 52px 1fr 52px 1fr;
+}
+
+.flow-step {
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.flow-step p:first-child { color: var(--primary-color); font-size: 32pt; padding-bottom: 14px; }
+.flow-step p { font-size: 16pt; }
+.flow-step.warning { border-color: rgba(241, 179, 91, 0.55); }
+.flow-step.danger { border-color: rgba(230, 95, 79, 0.65); }
+.flow-step.danger p:first-child { color: var(--secondary-color); }
+.arrow { align-items: center; display: flex; justify-content: center; }
+.arrow p { color: var(--muted-color); font-size: 22pt; }
+
+.quote-card {
+  background: #251c1b;
+  border-color: rgba(230, 95, 79, 0.45);
+  margin-bottom: 28px;
+  padding: 28px 34px;
+}
+
+.quote-card p { color: #ffe3dc; font-family: var(--heading-font); font-size: 24pt; }
+
+.cards {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.card { padding: 28px 24px; }
+.card p:first-child { color: var(--primary-color); font-size: 30pt; padding-bottom: 18px; }
+.card p { font-size: 16pt; padding-bottom: 8px; }
+
+.check-list {
+  display: grid;
+  gap: 18px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.check-list li {
+  background: var(--panel-bg);
+  border-left: 6px solid var(--primary-color);
+  border-radius: 12px;
+  color: var(--text-color);
+  font-size: 21pt;
+  line-height: 1.35;
+  padding: 20px 24px;
+}
+
+.check-list li::before { content: none; }
