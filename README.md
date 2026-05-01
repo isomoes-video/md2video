@@ -4,7 +4,7 @@
 
 ## What is in this repo
 
-- `prompts/plan-prompt.md`: create a reveal.js deck, CSS theme, `script.json`, and exported PDF under `output/<presentation-slug>/`.
+- `prompts/slide-prompt.md`: create a reveal.js deck, CSS theme, `script.json`, and exported PDF under `output/<presentation-slug>/`.
 - `prompts/tts-prompt.md`: generate one narration MP3 per slide from `script.json`.
 - `prompts/combine-prompt.md`: combine `output.pdf` and slide MP3s into `video.mp4`.
 - `prompts/script2intro-prompt.md`: generate `intro.txt` from `script.json`.
@@ -14,7 +14,7 @@
 ## Intended workflow
 
 1. Start with either a source file such as `source.md` or a direct text prompt.
-2. Use `prompts/plan-prompt.md` to create a presentation workspace under `output/<presentation-slug>/`.
+2. Use `prompts/slide-prompt.md` to create a presentation workspace under `output/<presentation-slug>/`.
 3. Review the generated presentation workspace and decide whether to continue to the next stage.
 4. Use `prompts/tts-prompt.md` to create `output/<presentation-slug>/audio/slide-XX.mp3` files.
 5. Use `prompts/combine-prompt.md` to create `output/<presentation-slug>/video.mp4`.

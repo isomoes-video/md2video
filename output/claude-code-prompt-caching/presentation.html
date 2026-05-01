@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>提示缓存决定一切</title>
+
+  <!-- Reveal.js core -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <section id="title" class="section-divider" data-state="is-section-divider">
+        <p class="eyebrow">来自 Claude Code 的经验</p>
+        <h1>提示缓存决定一切</h1>
+        <p class="subtitle">稳定前缀如何让长时间运行的智能体更快、更省钱、更可扩展。</p>
+      </section>
+
+      <section id="cache-rules">
+        <h2>缓存支配智能体的一切</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 1.05fr 1fr; gap: 34px; align-items: center;">
+            <div class="quote-panel">
+              <p class="text-3xl">只有重复上下文足够便宜，长时间运行的智能体才真正可行。</p>
+              <p>Claude Code 像对待生产可靠性一样对待缓存命中率：一旦下降，就触发告警和事故处理。</p>
+            </div>
+            <div class="metric-stack">
+              <div class="metric-card">
+                <p class="metric-number">更低</p>
+                <p>每轮延迟</p>
+              </div>
+              <div class="metric-card">
+                <p class="metric-number">更低</p>
+                <p>输入成本</p>
+              </div>
+              <div class="metric-card">
+                <p class="metric-number">更高</p>
+                <p>速率限制余量</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="prefix-match">
+        <h2>提示缓存本质上是前缀匹配</h2>
+        <div class="content">
+          <div class="prefix-rail">
+            <div class="prefix-segment stable"><p>静态系统提示</p></div>
+            <div class="prefix-segment stable"><p>工具</p></div>
+            <div class="prefix-segment project"><p>CLAUDE.md</p></div>
+            <div class="prefix-segment session"><p>会话上下文</p></div>
+            <div class="prefix-segment live"><p>对话</p></div>
+          </div>
+          <div class="two-note-grid">
+            <div class="note-card">
+              <h3>共享前缀</h3>
+              <p>从请求开头到每个缓存断点之间的内容，都必须逐字节完全一致。</p>
+            </div>
+            <div class="note-card warning">
+              <h3>默认很脆弱</h3>
+              <p>时间戳、工具顺序变化，或工具结构定义改动，都可能让缓存前缀失效。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="layout-prompt">
+        <h2>为复用而组织提示</h2>
+        <div class="content">
+          <div class="ladder">
+            <div class="ladder-step step-1"><p><strong>1.</strong> 静态系统提示与工具</p></div>
+            <div class="ladder-step step-2"><p><strong>2.</strong> 项目指令</p></div>
+            <div class="ladder-step step-3"><p><strong>3.</strong> 会话上下文</p></div>
+            <div class="ladder-step step-4"><p><strong>4.</strong> 持续增长的对话</p></div>
+          </div>
+          <p class="big-rule">静态内容在前，动态内容在后。</p>
+          <p class="text-muted">这种顺序能让许多会话共享早期缓存命中，只让实时对话部分发生变化。</p>
+        </div>
+      </section>
+
+      <section id="message-updates">
+        <h2>用消息承载更新</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px;">
+            <div class="do-card bad">
+              <h3>破坏缓存的直觉做法</h3>
+              <ul>
+                <li>修改系统提示</li>
+                <li>插入新的时间戳</li>
+                <li>就地重写指令</li>
+              </ul>
+            </div>
+            <div class="do-card good">
+              <h3>缓存安全的模式</h3>
+              <ul>
+                <li>在下一轮添加消息</li>
+                <li>使用聚焦的系统提醒</li>
+                <li>保留稳定前缀</li>
+              </ul>
+            </div>
+          </div>
+          <p class="text-xl callout-line">变化的信息应该放在末尾附近，而不是塞进已缓存的开头。</p>
+        </div>
+      </section>
+
+      <section id="model-switching">
+        <h2>不要在会话中途切换模型</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 34px; align-items: stretch;">
+            <div class="model-card">
+              <p class="text-4xl">100k</p>
+              <p>用 Opus 缓存的词元，继续使用可能比为 Haiku 重建缓存更便宜。</p>
+            </div>
+            <div class="flow-card">
+              <h3>更好的出口</h3>
+              <div class="flow-row"><p>父模型</p><p>准备交接信息</p></div>
+              <div class="flow-row"><p>子智能体</p><p>带着聚焦上下文启动</p></div>
+              <div class="flow-row"><p>主会话</p><p>保持缓存完整</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tools-stable">
+        <h2>不要在会话中途增删工具</h2>
+        <div class="content">
+          <div class="tool-grid">
+            <div class="tool-tile"><p><i class="fa-solid fa-wrench"></i></p><h3>工具也是前缀</h3><p>改变工具集合会让整段对话的缓存失效。</p></div>
+            <div class="tool-tile"><p><i class="fa-solid fa-map"></i></p><h3>计划模式</h3><p>保留所有工具；用工具驱动的状态加消息来表达计划模式。</p></div>
+            <div class="tool-tile"><p><i class="fa-solid fa-magnifying-glass"></i></p><h3>工具搜索</h3><p>使用稳定的轻量级桩并延迟加载，而不是移除工具。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="compaction-trap">
+        <h2>压缩里藏着成本陷阱</h2>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+            <div class="compaction-card trap">
+              <h3>单独调用摘要器</h3>
+              <p>不同的系统提示。没有工具。前缀立刻分叉。</p>
+              <p class="badge">完整输入不命中缓存</p>
+            </div>
+            <div class="compaction-card safe">
+              <h3>缓存安全的分叉</h3>
+              <p>相同的系统提示、上下文、工具和历史；压缩提示放在最后。</p>
+              <p class="badge">只新增词元</p>
+            </div>
+          </div>
+          <p class="text-muted">预留压缩缓冲区，确保提示和摘要输出仍能放得下。</p>
+        </div>
+      </section>
+
+      <section id="operating-model">
+        <h2>像运营基础设施一样运营缓存</h2>
+        <div class="content">
+          <div class="ops-board">
+            <div><p class="ops-label">度量</p><p>缓存命中率、延迟和输入开销。</p></div>
+            <div><p class="ops-label">告警</p><p>前缀被破坏，值得按生产问题处理。</p></div>
+            <div><p class="ops-label">设计</p><p>功能默认必须保留稳定前缀。</p></div>
+            <div><p class="ops-label">评审</p><p>发布前检查工具结构定义、顺序和模型选择。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="takeaways">
+        <h2>智能体设计检查清单</h2>
+        <div class="content">
+          <div class="checklist">
+            <p><strong>1.</strong> 把提示缓存当作前缀约束。</p>
+            <p><strong>2.</strong> 稳定材料放前面，实时更新放最后。</p>
+            <p><strong>3.</strong> 保持模型和工具定义稳定。</p>
+            <p><strong>4.</strong> 在保留父前缀的前提下分叉工作。</p>
+            <p><strong>5.</strong> 像监控可用性一样监控缓存健康。</p>
+          </div>
+          <p class="closing-line">从第一天起围绕缓存设计，而不是等成本飙升后再补救。</p>
+        </div>
+        <p class="footnote">来源：Anthropic，《构建 Claude Code 的经验：提示缓存决定一切》，2026 年 4 月 30 日。</p>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js-plugins@latest/chart/plugin.js"></script>
+  <script>
+    Reveal.initialize({
+      width: 1280,
+      height: 720,
+      margin: 0,
+      controls: true,
+      progress: true,
+      slideNumber: false,
+      hash: true,
+      transition: 'slide',
+      center: false,
+      plugins: [ RevealChart ],
+      chart: {
+        defaults: Object.assign({
+          color: 'rgba(0, 0, 0, 0.8)',
+          borderColor: 'rgba(0, 0, 0, 0.8)',
+          devicePixelRatio: 2
+        }, window.location.search.includes('export') ? { animation: false } : {})
+      }
+    });
+  </script>
+</body>
+</html>
