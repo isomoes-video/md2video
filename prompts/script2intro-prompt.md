@@ -18,6 +18,7 @@ Given subtitle files for a rendered presentation, generate a concise video intro
 
 - Read `output/<presentation-slug>/audio/slide-*.srt`.
 - Read `output/<presentation-slug>/script.json` when helpful for fuller context.
+- If `script.json` or related presentation metadata shows the source content came from a URL, preserve that original URL in the generated introduction.
 - Treat slide number order as the source of truth for chapter order.
 - Treat each slide SRT's actual subtitle timing as the source of spoken timing within that slide.
 - Derive the chapter timeline from the real rendered sequence, using the slide audio order and the workflow's configured inter-slide gap.
@@ -40,6 +41,7 @@ HH:MM  SectionTitle
 
 Rules:
 - The summary can be multiple paragraphs but must not exceed 2000 words in total. It describes the full video content, not individual chapters.
+- When the source content came from a URL, include the origin URL in the summary/introduction text, for example as a final line: `Source: <origin-url>`.
 - Each chapter entry is exactly two parts on one line: timestamp and section title.
 - Prefer short chapter titles in the subtitle language, ideally 1-2 words and no more than 3 words.
 - The chapter list must contain no more than 10 entries. Use fewer when major sections should be merged.
@@ -59,9 +61,9 @@ Rules:
 ## Instructions
 
 1. Read through all `output/<presentation-slug>/audio/slide-*.srt` files in slide order.
-2. Use the subtitle content, timing, and `script.json` context to understand the full video.
+2. Use the subtitle content, timing, and `script.json` context to understand the full video. Check `script.json` and nearby metadata for source URL fields such as `source`, `url`, `source_url`, or `origin_url`.
 3. Generate two video titles for the same content: one in Chinese and one in English.
-4. Write a summary (one or more paragraphs, max 2000 words) describing the overall video content in depth.
+4. Write a summary (one or more paragraphs, max 2000 words) describing the overall video content in depth. If the source was a URL, keep the exact origin URL in this introduction.
 5. Identify the major topic shifts or chapter boundaries.
 6. For each chapter, output one line: timestamp + very short title.
 7. Do not force 10 chapters; choose only the major sections needed.

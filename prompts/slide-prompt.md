@@ -19,6 +19,13 @@ You are preparing source content for reveal.js presentation and narration produc
 - Create the presentation by following the `skills/revealjs/SKILL.md` workflow and requirements.
 - Treat `skills/revealjs/SKILL.md` as the source of truth for presentation structure, styling, review, and export rules.
 
+## Language requirements
+
+- Write all visible slide content in Chinese, including titles, headings, bullets, labels, captions, callouts, and chart text.
+- Write all `script.json` narration in Chinese.
+- Keep technical identifiers, file paths, code snippets, commands, API names, product names, and proper nouns in their original language unless a widely accepted Chinese translation exists.
+- If the source content is not Chinese, translate and localize it naturally instead of copying English wording onto the slides.
+
 ## Output contract
 
 - Output directory: create a dedicated subdirectory under `output/` for the presentation, for example `output/<presentation-slug>/`.
