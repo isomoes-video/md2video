@@ -38,3 +38,4 @@ output/*-investor-demo/
 **/audio/*
 **/video-work/*
 *.mp4
+/.claude/worktrees
