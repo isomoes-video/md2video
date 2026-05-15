@@ -48,3 +48,9 @@ You are preparing source content for reveal.js presentation and narration produc
 - The PDF must preserve slide pagination so each reveal.js slide becomes a single PDF page.
 - If screenshots or preview assets are generated during review, keep them separate from the final PDF deliverable.
 - Any review artifacts should also stay inside the same `output/<presentation-slug>/` workspace, such as `output/<presentation-slug>/screenshots/`.
+
+## Preview step
+
+- After exporting `output.pdf`, open it for the user with the platform's default PDF viewer so they can immediately review the result.
+- On Linux, run `xdg-open output/<presentation-slug>/output.pdf` in the background; on macOS, use `open`; on Windows, use `start`. Detach from the foreground so the assistant session is not blocked.
+- Mention to the user that the PDF has been opened, and point out the absolute path so they can re-open it manually if needed.
