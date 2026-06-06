@@ -11,7 +11,7 @@ Create HTML presentations using reveal.js. No build step required - just open th
 
 A reveal.js presentation consists of:
 
-1. **HTML file** - Contains slides and loads reveal.js from CDN
+1. **HTML file** - Contains slides and loads reveal.js (from local `node_modules` when available, CDN otherwise — the scaffold script resolves this automatically; CDN domains like jsdelivr/cdnjs are unreachable on some networks)
 2. **CSS file** - Custom styles for layouts, colors, typography, and components
 
 ## Design Principles
@@ -270,13 +270,14 @@ If overflow is detected, reduce content or adjust font sizes on affected slides.
 
 **CRITICAL: You MUST review screenshots of EVERY SINGLE SLIDE.** Do not skip slides or review only a sample. Visual issues are common and can only be caught by examining each slide individually.
 
-Capture screenshots of all slides:
+Capture screenshots of all slides (the screenshots directory must exist before decktape runs, or it fails with ENOENT):
 
 ```bash
 cd <presentation-directory>
+SS_DIR="screenshots/$(date +%Y%m%d_%H%M%S)" && mkdir -p "$SS_DIR" && \
  bun decktape reveal "presentation.html?export" output.pdf \
   --screenshots \
-  --screenshots-directory "screenshots/$(date +%Y%m%d_%H%M%S)"
+  --screenshots-directory "$SS_DIR"
 ```
 
 **Note:** The `?export` query parameter disables chart animations for cleaner PDF rendering. Charts will still animate when viewing the HTML directly in a browser.

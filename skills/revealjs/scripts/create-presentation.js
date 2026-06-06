@@ -11,6 +11,72 @@ const path = require('path');
 // Path to the base styles file (relative to this script)
 const BASE_STYLES_PATH = path.join(__dirname, '..', 'references', 'base-styles.css');
 
+// Assets the scaffold needs, as paths inside node_modules, with CDN fallbacks.
+// Local assets are preferred: CDN domains (jsdelivr/cdnjs) are unreachable on
+// some networks, which breaks both browser viewing and puppeteer/decktape.
+const ASSETS = {
+  revealReset: {
+    local: 'reveal.js/dist/reset.css',
+    cdn: 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css',
+  },
+  revealCss: {
+    local: 'reveal.js/dist/reveal.css',
+    cdn: 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css',
+  },
+  fontAwesome: {
+    local: '@fortawesome/fontawesome-free/css/all.min.css',
+    cdn: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
+  },
+  chartJs: {
+    local: 'chart.js/dist/chart.umd.js',
+    cdn: 'https://cdn.jsdelivr.net/npm/chart.js',
+  },
+  revealJs: {
+    local: 'reveal.js/dist/reveal.js',
+    cdn: 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js',
+  },
+  chartPlugin: {
+    local: 'reveal.js-plugins/chart/plugin.js',
+    cdn: 'https://cdn.jsdelivr.net/npm/reveal.js-plugins@latest/chart/plugin.js',
+  },
+};
+
+/**
+ * Walks up from startDir looking for a node_modules that contains ALL of the
+ * required asset files. Returns its absolute path, or null if none is found.
+ */
+function findNodeModules(startDir) {
+  let dir = path.resolve(startDir);
+  while (true) {
+    const nm = path.join(dir, 'node_modules');
+    if (Object.values(ASSETS).every(a => fs.existsSync(path.join(nm, a.local)))) {
+      return nm;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
+/**
+ * Resolves each asset to either a relative local path (preferred) or its CDN
+ * URL. outputDir is the directory the HTML file will live in.
+ */
+function resolveAssets(outputDir) {
+  const nm = findNodeModules(outputDir);
+  const resolved = {};
+  for (const [key, asset] of Object.entries(ASSETS)) {
+    if (nm) {
+      const rel = path.relative(path.resolve(outputDir), path.join(nm, asset.local));
+      resolved[key] = rel.split(path.sep).join('/');
+    } else {
+      resolved[key] = asset.cdn;
+    }
+  }
+  resolved._mode = nm ? `local (${nm})` : 'CDN (no usable node_modules found)';
+  return resolved;
+}
+
 function parseArgs(args) {
   const options = {
     slides: null,
@@ -120,7 +186,7 @@ function generateSlides(structure) {
   return slides;
 }
 
-function generateHTML(options) {
+function generateHTML(options, assets) {
   const slidesContent = generateSlides(options.structure);
 
   return `<!doctype html>
@@ -131,17 +197,17 @@ function generateHTML(options) {
   <title>${options.title}</title>
 
   <!-- Reveal.js core -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="${assets.revealReset}">
+  <link rel="stylesheet" href="${assets.revealCss}">
 
   <!-- Font Awesome for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="${assets.fontAwesome}">
 
   <!-- Custom styles -->
   <link rel="stylesheet" href="${options.stylesFile}">
 
   <!-- Chart.js for data visualization -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="${assets.chartJs}"></script>
 </head>
 <body>
   <div class="reveal">
@@ -150,8 +216,8 @@ ${slidesContent}
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/reveal.js-plugins@latest/chart/plugin.js"></script>
+  <script src="${assets.revealJs}"></script>
+  <script src="${assets.chartPlugin}"></script>
   <script>
     Reveal.initialize({
       width: 1280,
@@ -216,8 +282,12 @@ function main() {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
+  // Resolve assets: prefer local node_modules, fall back to CDN
+  const assets = resolveAssets(outputDir && outputDir !== '.' ? outputDir : '.');
+  console.log(`Assets: ${assets._mode}`);
+
   // Generate and write HTML
-  const html = generateHTML(options);
+  const html = generateHTML(options, assets);
   fs.writeFileSync(options.output, html);
   console.log(`Created ${options.output}`);
 
