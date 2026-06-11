@@ -11,6 +11,7 @@ derived entirely from the filesystem (no database, no build step):
     audio   -> audio/slide-*.mp3 count vs len(script.json)
     video   -> video.mp4 exists
     intro   -> intro.txt exists
+    thumb   -> thumbnail.png exists (previewed inline on the deck card)
 
 Serves a self-contained dashboard that polls ``/status`` and renders one card
 per deck, so you can literally watch decks fill in stage by stage as the agent
@@ -53,6 +54,7 @@ def scan_decks() -> list[dict]:
         pdf = deck_dir / "output.pdf"
         video = deck_dir / "video.mp4"
         intro = deck_dir / "intro.txt"
+        thumbnail = deck_dir / "thumbnail.png"
         audio_dir = deck_dir / "audio"
 
         slide_count: int | None = None
@@ -72,7 +74,7 @@ def scan_decks() -> list[dict]:
         audio_total = slide_count or 0
 
         mtime = 0.0
-        for path in (script, presentation, pdf, video, intro):
+        for path in (script, presentation, pdf, video, intro, thumbnail):
             if path.is_file():
                 mtime = max(mtime, path.stat().st_mtime)
         if audio_dir.is_dir():
@@ -91,10 +93,15 @@ def scan_decks() -> list[dict]:
                 "audio_complete": audio_total > 0 and audio_done >= audio_total,
                 "video_done": video.is_file(),
                 "intro_done": intro.is_file(),
+                "thumb_done": thumbnail.is_file(),
                 "has_presentation": presentation.is_file(),
                 "has_pdf": pdf.is_file(),
                 "has_video": video.is_file(),
                 "has_intro": intro.is_file(),
+                "has_thumbnail": thumbnail.is_file(),
+                # version tag so the browser refetches the preview only when
+                # the PNG is actually regenerated (e.g. --overwrite reruns)
+                "thumb_mtime": thumbnail.stat().st_mtime if thumbnail.is_file() else 0,
                 "mtime": mtime,
             }
         )
