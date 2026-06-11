@@ -8,8 +8,10 @@
 - `prompts/tts-prompt.md`: generate one narration MP3 per slide from `script.json`.
 - `prompts/combine-prompt.md`: combine `output.pdf` and slide MP3s into `video.mp4`.
 - `prompts/script2intro-prompt.md`: generate `intro.txt` from `script.json`.
+- `prompts/thumbnail-prompt.md`: generate `thumbnail.png` from a crafted Qwen-Image prompt.
 - `scripts/tts_from_script.py`: standalone `uv run` TTS helper.
 - `scripts/combine_video.py`: standalone `uv run` video assembly helper.
+- `scripts/thumbnail_from_prompt.py`: standalone `uv run` thumbnail image helper.
 
 ## Intended workflow
 
@@ -19,6 +21,7 @@
 4. Use `prompts/tts-prompt.md` to create `output/<presentation-slug>/audio/slide-XX.mp3` files.
 5. Use `prompts/combine-prompt.md` to create `output/<presentation-slug>/video.mp4`.
 6. Optionally use `prompts/script2intro-prompt.md` to create `output/<presentation-slug>/intro.txt`.
+7. Optionally use `prompts/thumbnail-prompt.md` to create `output/<presentation-slug>/thumbnail.png`.
 
 ## Notes
 
