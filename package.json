@@ -1,4 +1,13 @@
 {
+  "name": "md2video",
+  "version": "0.1.3",
+  "description": "Markdown-to-video pipeline: reveal.js slides rendered to PDF, per-slide TTS narration, combined into a narrated mp4 with intro and thumbnail",
+  "author": "isomoes",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isomoes-video/md2video.git"
+  },
+  "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
     "chart.js": "4.5.1",
