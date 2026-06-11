@@ -1,0 +1,3 @@
+[submodule "output"]
+	path = output
+	url = https://github.com/isomoes-video/ai-video.git

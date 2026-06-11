@@ -26,3 +26,15 @@
 ## Notes
 
 The prompt files are stage-specific on purpose. Pick the prompt that matches the artifact you want to generate, and keep all outputs for a presentation in the same `output/<presentation-slug>/` directory.
+
+## Output submodule
+
+Generated presentations live in the [ai-video](https://github.com/isomoes-video/ai-video) repo, mounted here as the `output/` git submodule. Clone with submodules:
+
+```bash
+git clone --recurse-submodules https://github.com/isomoes-video/md2video.git
+# or, in an existing clone:
+git submodule update --init
+```
+
+After generating new artifacts, commit and push inside `output/` first, then commit the updated submodule pointer in this repo.
