@@ -4,14 +4,15 @@ You are generating a concise video introduction from subtitle timing and narrati
 
 ## Task
 
-Given subtitle files for a rendered presentation, generate a concise video introduction with four parts:
+Given subtitle files for a rendered presentation, generate a concise video introduction with five parts:
 
 1. **Video Title** — Provide two versions of the title for the same video:
    - Chinese title
    - English title
 2. **Summary** — One or more paragraphs describing the overall content of the video, not exceeding 2000 words in total.
 3. **Source URL** — If the source content came from a URL (e.g., a blog post, article, or webpage), the exact origin URL **must** be stored in `intro.txt` on its own line as `Source: <origin-url>`. Omit this line only when there is genuinely no source URL.
-4. **Chapter List** — A list of major sections, each on its own line as: `HH:MM  SectionTitle`
+4. **Output URL** — The `output/` directory is published publicly at https://github.com/isomoes-video/ai-video/, so every presentation's generated assets are browsable online. Always include the public URL for this presentation on its own line as `Output: https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>`.
+5. **Chapter List** — A list of major sections, each on its own line as: `HH:MM  SectionTitle`
 
 ---
 
@@ -25,6 +26,7 @@ Given subtitle files for a rendered presentation, generate a concise video intro
   3. The original user request, recent conversation context, or any input file referenced when the presentation was created.
   4. `output/<presentation-slug>/presentation.html` and any sibling input files for a `Source:` or `Origin:` annotation.
 - If the source content came from a URL (a blog post, article, documentation page, etc.), that URL **must** be preserved verbatim in `intro.txt`.
+- The output URL is deterministic — no discovery needed. Build it from the presentation slug: `https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>`.
 - Treat slide number order as the source of truth for chapter order.
 - Treat each slide SRT's actual subtitle timing as the source of spoken timing within that slide.
 - Derive the chapter timeline from the real rendered sequence, using the slide audio order and the workflow's configured inter-slide gap.
@@ -38,6 +40,7 @@ Given subtitle files for a rendered presentation, generate a concise video intro
 English Title: <English title>
 
 Source: <origin-url>
+Output: https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>
 
 <Summary paragraph describing the whole video>
 
@@ -51,6 +54,7 @@ Rules:
 - The summary can be multiple paragraphs but must not exceed 2000 words in total. It describes the full video content, not individual chapters.
 - When the source content came from a URL, you **must** include the origin URL on its own line as `Source: <origin-url>`, placed **before** the summary (right after the two title lines). Use the exact URL — do not shorten, paraphrase, or wrap it in markdown.
 - Only omit the `Source:` line when the source genuinely has no URL (e.g., a local file with no upstream origin). When in doubt, include it.
+- Always include the `Output:` line with the public output URL `https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>`, placed directly after the `Source:` line (or where the `Source:` line would be, when there is no source URL). The output is always public, so this line is never omitted.
 - Each chapter entry is exactly two parts on one line: timestamp and section title.
 - Prefer short chapter titles in the subtitle language, ideally 1-2 words and no more than 3 words.
 - The chapter list must contain no more than 10 entries. Use fewer when major sections should be merged.
@@ -62,7 +66,7 @@ Rules:
 ## Output contract
 
 - Write the result inside the same workspace directory: `output/<presentation-slug>/intro.txt`.
-- Output only the two titles, summary paragraph(s), optional `Source: <origin-url>` line, and chapter list in the final file.
+- Output only the two titles, optional `Source: <origin-url>` line, `Output: <output-url>` line, summary paragraph(s), and chapter list in the final file.
 - Do not add preamble, explanation, or extra commentary.
 
 ---
@@ -75,10 +79,11 @@ Rules:
 4. Generate two video titles for the same content: one in Chinese and one in English.
 5. Write a summary (one or more paragraphs, max 2000 words) describing the overall video content in depth.
 6. If a source URL was found, add a line `Source: <origin-url>` **before** the summary (immediately after the two title lines). Use the URL exactly as found.
-7. Identify the major topic shifts or chapter boundaries.
-8. For each chapter, output one line: timestamp + very short title.
-9. Do not force 10 chapters; choose only the major sections needed.
-10. Save the output to `output/<presentation-slug>/intro.txt`.
+7. Add a line `Output: https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>` directly after the `Source:` line (or in its place when there is no source URL).
+8. Identify the major topic shifts or chapter boundaries.
+9. For each chapter, output one line: timestamp + very short title.
+10. Do not force 10 chapters; choose only the major sections needed.
+11. Save the output to `output/<presentation-slug>/intro.txt`.
 
 ---
 
@@ -91,6 +96,7 @@ Using a presentation about Claude Code benchmark workflows:
 English Title: Claude Code Workflow Benchmark
 
 Source: https://example.com/blog/claude-code-workflow-benchmark
+Output: https://github.com/isomoes-video/ai-video/tree/main/claude-code-workflow-benchmark
 
 这个视频比较多个大语言模型在真实 agent 编码工作流中的表现，关注它们在相同任务与环境下的执行质量、速度和完成情况。视频通过统一提示词和统一操作条件，展示不同模型在实际工作流中的差异，并据此讨论它们各自更适合的使用场景。
 
