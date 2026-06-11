@@ -9,9 +9,11 @@
 - `prompts/combine-prompt.md`: combine `output.pdf` and slide MP3s into `video.mp4`.
 - `prompts/script2intro-prompt.md`: generate `intro.txt` from `script.json`.
 - `prompts/thumbnail-prompt.md`: generate `thumbnail.png` from a crafted Qwen-Image prompt.
+- `prompts/upload-prompt.md`: publish `video.mp4` to Bilibili via `scripts/upload_bilibili.py`.
 - `scripts/tts_from_script.py`: standalone `uv run` TTS helper.
 - `scripts/combine_video.py`: standalone `uv run` video assembly helper.
 - `scripts/thumbnail_from_prompt.py`: standalone `uv run` thumbnail image helper.
+- `scripts/upload_bilibili.py`: standalone `uv run` Bilibili uploader; reads login cookies straight from the local browser.
 
 ## Intended workflow
 
@@ -22,6 +24,7 @@
 5. Use `prompts/combine-prompt.md` to create `output/<presentation-slug>/video.mp4`.
 6. Optionally use `prompts/script2intro-prompt.md` to create `output/<presentation-slug>/intro.txt`.
 7. Optionally use `prompts/thumbnail-prompt.md` to create `output/<presentation-slug>/thumbnail.png`.
+8. Optionally use `prompts/upload-prompt.md` to publish `video.mp4` to Bilibili (title/description come from `intro.txt`, cover from `thumbnail.png`). The upload always starts with a `--dry-run` review of what will be posted.
 
 ## Notes
 

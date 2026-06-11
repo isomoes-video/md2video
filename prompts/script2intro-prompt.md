@@ -4,15 +4,16 @@ You are generating a concise video introduction from subtitle timing and narrati
 
 ## Task
 
-Given subtitle files for a rendered presentation, generate a concise video introduction with five parts:
+Given subtitle files for a rendered presentation, generate a concise video introduction with six parts:
 
 1. **Video Title** — Provide two versions of the title for the same video:
    - Chinese title
    - English title
-2. **Summary** — One or more paragraphs describing the overall content of the video, not exceeding 2000 words in total.
-3. **Source URL** — If the source content came from a URL (e.g., a blog post, article, or webpage), the exact origin URL **must** be stored in `intro.txt` on its own line as `Source: <origin-url>`. Omit this line only when there is genuinely no source URL.
-4. **Output URL** — The `output/` directory is published publicly at https://github.com/isomoes-video/ai-video/, so every presentation's generated assets are browsable online. Always include the public URL for this presentation on its own line as `Output: https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>`.
-5. **Chapter List** — A list of major sections, each on its own line as: `HH:MM  SectionTitle`
+2. **Tags** — 3 to 10 short topic tags for the video, on their own line as `标签：tag1，tag2，tag3`. These become the Bilibili video tags consumed by the upload stage. Use the subtitle language, drop any leading `#`, and separate tags with full-width commas (`，`).
+3. **Summary** — One or more paragraphs describing the overall content of the video, not exceeding 2000 words in total.
+4. **Source URL** — If the source content came from a URL (e.g., a blog post, article, or webpage), the exact origin URL **must** be stored in `intro.txt` on its own line as `Source: <origin-url>`. Omit this line only when there is genuinely no source URL.
+5. **Output URL** — The `output/` directory is published publicly at https://github.com/isomoes-video/ai-video/, so every presentation's generated assets are browsable online. Always include the public URL for this presentation on its own line as `Output: https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>`.
+6. **Chapter List** — A list of major sections, each on its own line as: `HH:MM  SectionTitle`
 
 ---
 
@@ -38,6 +39,7 @@ Given subtitle files for a rendered presentation, generate a concise video intro
 ```text
 中文标题：<Chinese title>
 English Title: <English title>
+标签：<tag1>，<tag2>，<tag3>
 
 Source: <origin-url>
 Output: https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>
@@ -51,6 +53,7 @@ HH:MM  SectionTitle
 ```
 
 Rules:
+- Always include the `标签：` line directly after the two title lines. Provide 3-10 tags, in the subtitle language, separated by full-width commas (`，`), with no leading `#`. Tags should cover the core topics, named entities, and category (e.g. product names, technique, field) so the video is discoverable.
 - The summary can be multiple paragraphs but must not exceed 2000 words in total. It describes the full video content, not individual chapters.
 - When the source content came from a URL, you **must** include the origin URL on its own line as `Source: <origin-url>`, placed **before** the summary (right after the two title lines). Use the exact URL — do not shorten, paraphrase, or wrap it in markdown.
 - Only omit the `Source:` line when the source genuinely has no URL (e.g., a local file with no upstream origin). When in doubt, include it.
@@ -66,7 +69,7 @@ Rules:
 ## Output contract
 
 - Write the result inside the same workspace directory: `output/<presentation-slug>/intro.txt`.
-- Output only the two titles, optional `Source: <origin-url>` line, `Output: <output-url>` line, summary paragraph(s), and chapter list in the final file.
+- Output only the two titles, the `标签：` line, optional `Source: <origin-url>` line, `Output: <output-url>` line, summary paragraph(s), and chapter list in the final file.
 - Do not add preamble, explanation, or extra commentary.
 
 ---
@@ -77,13 +80,14 @@ Rules:
 2. Use the subtitle content, timing, and `script.json` context to understand the full video.
 3. **Locate the source URL.** Search `script.json` metadata fields (`source`, `url`, `source_url`, `origin_url`), narration and subtitle text for `https://...` mentions, the original user request, and sibling input files. If the source content came from a blog, article, or webpage, this URL must end up in `intro.txt`.
 4. Generate two video titles for the same content: one in Chinese and one in English.
-5. Write a summary (one or more paragraphs, max 2000 words) describing the overall video content in depth.
-6. If a source URL was found, add a line `Source: <origin-url>` **before** the summary (immediately after the two title lines). Use the URL exactly as found.
-7. Add a line `Output: https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>` directly after the `Source:` line (or in its place when there is no source URL).
-8. Identify the major topic shifts or chapter boundaries.
-9. For each chapter, output one line: timestamp + very short title.
-10. Do not force 10 chapters; choose only the major sections needed.
-11. Save the output to `output/<presentation-slug>/intro.txt`.
+5. Add a `标签：` line directly after the two title lines with 3-10 topic tags (subtitle language, full-width-comma separated, no `#`).
+6. Write a summary (one or more paragraphs, max 2000 words) describing the overall video content in depth.
+7. If a source URL was found, add a line `Source: <origin-url>` **before** the summary. Use the URL exactly as found.
+8. Add a line `Output: https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>` directly after the `Source:` line (or in its place when there is no source URL).
+9. Identify the major topic shifts or chapter boundaries.
+10. For each chapter, output one line: timestamp + very short title.
+11. Do not force 10 chapters; choose only the major sections needed.
+12. Save the output to `output/<presentation-slug>/intro.txt`.
 
 ---
 
@@ -94,6 +98,7 @@ Using a presentation about Claude Code benchmark workflows:
 ```text
 中文标题：Claude Code 工作流实测
 English Title: Claude Code Workflow Benchmark
+标签：Claude Code，大语言模型，AI编程，模型对比，Agent
 
 Source: https://example.com/blog/claude-code-workflow-benchmark
 Output: https://github.com/isomoes-video/ai-video/tree/main/claude-code-workflow-benchmark
