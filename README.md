@@ -24,7 +24,7 @@
 5. Use `prompts/combine-prompt.md` to create `output/<presentation-slug>/video.mp4`.
 6. Optionally use `prompts/script2intro-prompt.md` to create `output/<presentation-slug>/intro.txt`.
 7. Optionally use `prompts/thumbnail-prompt.md` to create `output/<presentation-slug>/thumbnail.png`.
-8. Optionally use `prompts/upload-prompt.md` to publish `video.mp4` to Bilibili (title/description come from `intro.txt`, cover from `thumbnail.png`). The upload always starts with a `--dry-run` review of what will be posted.
+8. Optionally use `prompts/upload-prompt.md` to publish `video.mp4` to Bilibili (title/description come from `intro.txt`, cover from `thumbnail.png`). The upload publishes directly; `--dry-run` is available for troubleshooting.
 
 ## Notes
 

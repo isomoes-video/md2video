@@ -8,7 +8,7 @@ You are publishing a finished presentation video to Bilibili.
 - Use the existing `scripts/upload_bilibili.py` script — do not rewrite it.
 - Let the script auto-discover metadata from the workspace: title, tags, and description from `intro.txt`, cover from `thumbnail.png`.
 - The script logs in automatically using the local browser — the user just needs to be logged into bilibili.com in a supported browser.
-- **Always run `--dry-run` first** and confirm the resolved plan with the user before the real upload. Publishing is public and cannot be undone from this workflow.
+- Publish directly in one step — the script resolves and validates everything (metadata, login) as part of the real upload. `--dry-run` is available for troubleshooting only, not a required stage.
 - Report the final video URL (`https://www.bilibili.com/video/<bvid>`) when the upload completes.
 
 ## Input contract
@@ -37,14 +37,14 @@ You are publishing a finished presentation video to Bilibili.
 Run the existing script with `uv run` (it carries its own inline dependencies):
 
 ```bash
-# 1. validate the resolved metadata (and browser login) without uploading
-uv run scripts/upload_bilibili.py --workspace output/<presentation-slug> --dry-run
-
-# 2. real upload, after the dry-run plan is confirmed
+# publish (auto-discovers video.mp4, thumbnail.png, intro.txt metadata)
 uv run scripts/upload_bilibili.py --workspace output/<presentation-slug>
 
 # restrict the login lookup to one browser
 uv run scripts/upload_bilibili.py --workspace output/<presentation-slug> --browser firefox
+
+# optional troubleshooting: validate the resolved metadata and login without uploading
+uv run scripts/upload_bilibili.py --workspace output/<presentation-slug> --dry-run
 ```
 
 **Key CLI flags:**
@@ -61,10 +61,9 @@ uv run scripts/upload_bilibili.py --workspace output/<presentation-slug> --brows
 ## Instructions
 
 1. Verify the workspace: `video.mp4` must exist. If `intro.txt` or `thumbnail.png` is missing, recommend running the script2intro / thumbnail stage first instead of uploading with fallback metadata — only proceed without them when the user explicitly says so.
-2. Run the `--dry-run` and review the resolved plan it prints: video, cover, title, tags, tid, login validity, and the description preview.
-3. Check the plan makes sense: the title is the intro's 中文标题 (not a slug fallback), the tags are the intro's 标签 (not the generic default), the description carries summary + 原文 link, and `login valid` is `True`. Adjust `--tags`/`--tid` when the intro tags or the default 科技 zone do not fit the topic.
-4. Show the plan to the user and get explicit confirmation before uploading.
-5. Run the real upload. The script streams progress events (`PREUPLOAD`, `COMPLETE`, …) and finishes with the `https://www.bilibili.com/video/<bvid>` URL — report that URL to the user.
+2. Sanity-check the metadata source before publishing: `intro.txt` carries a 中文标题 and a 标签 line that fit the topic. Adjust `--tags`/`--tid` when the intro tags or the default 科技 zone do not fit.
+3. Run the real upload directly — no dry-run or confirmation step. The script streams progress events (`PREUPLOAD`, `COMPLETE`, …) and finishes with the `https://www.bilibili.com/video/<bvid>` URL — report that URL to the user.
+4. Use `--dry-run` only when troubleshooting, for example to check login validity or preview the resolved plan without publishing.
 
 ## Troubleshooting
 
