@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>md2video · pipeline watch</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel-2: #1c2330;
+    --border: #2a3340; --text: #e6edf3; --muted: #8b95a3;
+    --todo: #3a4250; --slides: #d29922; --audio: #58a6ff;
+    --video: #a371f7; --intro: #2ea043; --done: #2ea043;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  header {
+    position: sticky; top: 0; z-index: 5; background: rgba(13,17,23,.92);
+    backdrop-filter: blur(6px); border-bottom: 1px solid var(--border);
+    padding: 14px 22px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 16px; margin: 0; letter-spacing: .3px; }
+  header h1 small { color: var(--muted); font-weight: 400; }
+  .summary { color: var(--muted); font-size: 13px; }
+  .summary b { color: var(--text); }
+  .spacer { flex: 1; }
+  .toggle { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; cursor: pointer; user-select: none; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--done); box-shadow: 0 0 0 0 rgba(46,160,67,.5); }
+  .dot.live { animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(46,160,67,.5);} 70%{box-shadow:0 0 0 7px rgba(46,160,67,0);} 100%{box-shadow:0 0 0 0 rgba(46,160,67,0);} }
+  main { padding: 20px; display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); max-width: 1500px; margin: 0 auto; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 15px 16px 14px; display: flex; flex-direction: column; gap: 11px;
+    transition: border-color .2s;
+  }
+  .card.active { border-color: var(--audio); box-shadow: 0 0 0 1px rgba(88,166,255,.25); }
+  .card.complete { opacity: .92; }
+  .card .top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .slug { font-weight: 600; font-size: 14px; word-break: break-word; }
+  .pct { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .pct.done { color: var(--done); }
+  .stages { display: flex; gap: 6px; }
+  .stage { flex: 1; text-align: center; font-size: 11px; padding: 5px 4px; border-radius: 6px;
+    background: var(--panel-2); color: var(--muted); border: 1px solid transparent; line-height: 1.25; }
+  .stage .lab { display: block; font-size: 9.5px; letter-spacing: .4px; text-transform: uppercase; opacity: .8; }
+  .stage .val { font-weight: 600; font-size: 12px; }
+  .stage.on-slides { background: rgba(210,153,34,.16); color: #f0c674; border-color: rgba(210,153,34,.4); }
+  .stage.on-audio  { background: rgba(88,166,255,.16); color: #79b8ff; border-color: rgba(88,166,255,.4); }
+  .stage.on-video  { background: rgba(163,113,247,.16); color: #c8a6ff; border-color: rgba(163,113,247,.4); }
+  .stage.on-intro  { background: rgba(46,160,67,.16); color: #56d364; border-color: rgba(46,160,67,.4); }
+  .stage.partial   { background: rgba(88,166,255,.10); color: #79b8ff; border-color: rgba(88,166,255,.3); }
+  .bar { height: 5px; border-radius: 4px; background: var(--panel-2); overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--audio), var(--intro)); transition: width .4s; }
+  .links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .links a { font-size: 12px; color: var(--text); text-decoration: none; padding: 4px 10px; border-radius: 6px;
+    background: var(--panel-2); border: 1px solid var(--border); }
+  .links a:hover { border-color: var(--audio); color: var(--audio); }
+  .empty { color: var(--muted); padding: 60px 20px; text-align: center; grid-column: 1 / -1; }
+  footer { color: var(--muted); text-align: center; font-size: 12px; padding: 18px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>md2video <small>· pipeline watch</small></h1>
+  <div class="summary" id="summary">scanning…</div>
+  <div class="spacer"></div>
+  <label class="toggle"><span class="dot live" id="dot"></span><span id="ts">—</span></label>
+  <label class="toggle"><input type="checkbox" id="auto" checked /> auto-refresh</label>
+</header>
+<main id="grid"></main>
+<footer>Read-only view · state derived live from <code>output/&lt;slug&gt;/</code> · refreshes every 2s</footer>
+
+<script>
+const STAGES = [
+  { key: "slides", lab: "Slides" },
+  { key: "audio",  lab: "Audio" },
+  { key: "video",  lab: "Video" },
+  { key: "intro",  lab: "Intro" },
+];
+
+function progress(d) {
+  const audioFrac = d.audio_total > 0 ? Math.min(1, d.audio_done / d.audio_total) : 0;
+  const parts = [d.slides_done ? 1 : 0, audioFrac, d.video_done ? 1 : 0, d.intro_done ? 1 : 0];
+  return parts.reduce((a, b) => a + b, 0) / parts.length;
+}
+
+function stageCell(d, key) {
+  if (key === "slides")
+    return d.slides_done
+      ? `<div class="stage on-slides"><span class="lab">Slides</span><span class="val">✓</span></div>`
+      : `<div class="stage"><span class="lab">Slides</span><span class="val">·</span></div>`;
+  if (key === "audio") {
+    if (d.audio_total === 0)
+      return `<div class="stage"><span class="lab">Audio</span><span class="val">·</span></div>`;
+    const cls = d.audio_complete ? "on-audio" : (d.audio_done > 0 ? "partial" : "");
+    return `<div class="stage ${cls}"><span class="lab">Audio</span><span class="val">${d.audio_done}/${d.audio_total}</span></div>`;
+  }
+  if (key === "video")
+    return d.video_done
+      ? `<div class="stage on-video"><span class="lab">Video</span><span class="val">✓</span></div>`
+      : `<div class="stage"><span class="lab">Video</span><span class="val">·</span></div>`;
+  return d.intro_done
+    ? `<div class="stage on-intro"><span class="lab">Intro</span><span class="val">✓</span></div>`
+    : `<div class="stage"><span class="lab">Intro</span><span class="val">·</span></div>`;
+}
+
+function card(d) {
+  const pct = Math.round(progress(d) * 100);
+  const complete = pct === 100;
+  // "active" = some work done but not finished (likely being generated now)
+  const active = !complete && (d.slides_done || d.audio_done > 0);
+  const base = `/output/${encodeURIComponent(d.slug)}`;
+  const links = [];
+  if (d.has_video) links.push(`<a href="${base}/video.mp4" target="_blank">▶ Video</a>`);
+  if (d.has_presentation) links.push(`<a href="${base}/presentation.html" target="_blank">👁 Slides</a>`);
+  if (d.has_pdf) links.push(`<a href="${base}/output.pdf" target="_blank">📄 PDF</a>`);
+  if (d.has_intro) links.push(`<a href="${base}/intro.txt" target="_blank">📝 Intro</a>`);
+
+  return `<div class="card ${complete ? "complete" : ""} ${active ? "active" : ""}">
+    <div class="top">
+      <span class="slug">${d.slug}</span>
+      <span class="pct ${complete ? "done" : ""}">${complete ? "✓ done" : pct + "%"}</span>
+    </div>
+    <div class="stages">${STAGES.map(s => stageCell(d, s.key)).join("")}</div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div class="links">${links.join("") || '<span class="pct">no artifacts yet</span>'}</div>
+  </div>`;
+}
+
+async function refresh() {
+  try {
+    const res = await fetch("/status", { cache: "no-store" });
+    const { decks } = await res.json();
+    const grid = document.getElementById("grid");
+    grid.innerHTML = decks.length
+      ? decks.map(card).join("")
+      : `<div class="empty">No decks found under <code>output/</code> yet.</div>`;
+    const complete = decks.filter(d => progress(d) === 1).length;
+    const active = decks.filter(d => { const p = progress(d); return p > 0 && p < 1; }).length;
+    document.getElementById("summary").innerHTML =
+      `<b>${decks.length}</b> decks · <b>${complete}</b> complete` +
+      (active ? ` · <b>${active}</b> in progress` : "");
+    document.getElementById("ts").textContent = new Date().toLocaleTimeString();
+    document.getElementById("dot").classList.add("live");
+  } catch (e) {
+    document.getElementById("summary").textContent = "server unreachable — is dashboard.py running?";
+    document.getElementById("dot").classList.remove("live");
+  }
+}
+
+let timer = null;
+function loop() {
+  refresh();
+  clearTimeout(timer);
+  if (document.getElementById("auto").checked) timer = setTimeout(loop, 2000);
+}
+document.getElementById("auto").addEventListener("change", loop);
+loop();
+</script>
+</body>
+</html>
