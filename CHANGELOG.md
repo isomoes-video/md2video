@@ -9,6 +9,13 @@ Generated presentation outputs were extracted to the
 [ai-video](https://github.com/isomoes-video/ai-video) repo (mounted as the
 `output/` submodule); deck-only commits live in that repo's history.
 
+## 0.1.5
+
+- feat(upload): add Bilibili upload stage (@isomoes) d7870ad
+- feat(dashboard): preview thumbnail stage on deck cards (@isomoes) 024f070
+- docs: add public output URL line to intro.txt format (@isomoes) b548ae0
+- docs: regenerate changelog for rewritten history (@isomoes) 2855357
+
 ## 0.1.4
 
 - refactor: extract output/ into ai-video submodule (@isomoes) ac731c7
