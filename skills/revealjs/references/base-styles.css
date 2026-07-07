@@ -40,7 +40,7 @@
   /* Layout */
   --slide-padding: 60px;
   --slide-padding-top: 40px;
-  --watermark-safe-top: 44px;
+  --watermark-safe-top: 0px;   /* Extra top reserve; only set >0 (e.g. 44px) if a logo/watermark overlays the top edge */
   --content-gap: 30px;
 
   /* Border radius for custom components */
