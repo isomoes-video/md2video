@@ -13,7 +13,7 @@ Given subtitle files for a rendered presentation, generate a concise video intro
 3. **Summary** — One or more paragraphs describing the overall content of the video, not exceeding 2000 words in total.
 4. **Source URL** — If the source content came from a URL (e.g., a blog post, article, or webpage), the exact origin URL **must** be stored in `intro.txt` on its own line as `Source: <origin-url>`. Omit this line only when there is genuinely no source URL.
 5. **Output URL** — The `output/` directory is published publicly at https://github.com/isomoes-video/ai-video/, so every presentation's generated assets are browsable online. Always include the public URL for this presentation on its own line as `Output: https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>`.
-6. **Chapter List** — A list of major sections, each on its own line as: `HH:MM  SectionTitle`
+6. **Chapter List** — A list of major sections, each on its own line as: `HH:MM  SectionTitle`. The chapter list has a hard maximum of **10 entries**.
 
 ---
 
@@ -29,6 +29,7 @@ Given subtitle files for a rendered presentation, generate a concise video intro
 - If the source content came from a URL (a blog post, article, documentation page, etc.), that URL **must** be preserved verbatim in `intro.txt`.
 - The output URL is deterministic — no discovery needed. Build it from the presentation slug: `https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>`.
 - Treat slide number order as the source of truth for chapter order.
+- Chapters summarize the video at the topic level, not the slide level. Merge adjacent slides that belong to the same topic, including section dividers, transitions, examples, and supporting evidence.
 - Treat each slide SRT's actual subtitle timing as the source of spoken timing within that slide.
 - Derive the chapter timeline from the real rendered sequence, using the slide audio order and the workflow's configured inter-slide gap.
 
@@ -60,7 +61,7 @@ Rules:
 - Always include the `Output:` line with the public output URL `https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>`, placed directly after the `Source:` line (or where the `Source:` line would be, when there is no source URL). The output is always public, so this line is never omitted.
 - Each chapter entry is exactly two parts on one line: timestamp and section title.
 - Prefer short chapter titles in the subtitle language, ideally 1-2 words and no more than 3 words.
-- The chapter list must contain no more than 10 entries. Use fewer when major sections should be merged.
+- The chapter list must contain no more than 10 entries. This is a hard output constraint, not a preference. If there are more than 10 possible boundaries, merge the least important adjacent sections before writing the file.
 - Timestamp format: `MM:SS` or `HH:MM:SS`, no milliseconds.
 - Use the same language as the subtitle content for the summary and chapter titles.
 
@@ -87,7 +88,8 @@ Rules:
 9. Identify the major topic shifts or chapter boundaries.
 10. For each chapter, output one line: timestamp + very short title.
 11. Do not force 10 chapters; choose only the major sections needed.
-12. Save the output to `output/<presentation-slug>/intro.txt`.
+12. Before saving, count the chapter lines matching `^[0-9]{2}:[0-9]{2}  `. If the count is greater than 10, merge adjacent chapters and recount. Never write an `intro.txt` containing 11 or more chapter lines.
+13. Save the output to `output/<presentation-slug>/intro.txt`.
 
 ---
 
