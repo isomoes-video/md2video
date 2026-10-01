@@ -12,7 +12,7 @@ Use the existing `scripts/thumbnail_from_prompt.py` script — do not rewrite it
 
 ## Input
 
-`output/<presentation-slug>/intro.txt` is the **only** content source. Do not read `script.json`, `styles.css`, or `presentation.html`.
+`output/<presentation-slug>/intro.txt` is the **only** content source. Do not read `script.json`, `slides.json`, or renderer source files.
 
 The intro file looks like:
 

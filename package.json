@@ -1,7 +1,13 @@
 {
   "name": "md2video",
   "version": "0.1.5",
-  "description": "Markdown-to-video pipeline: reveal.js slides rendered to PDF, per-slide TTS narration, combined into a narrated mp4 with intro and thumbnail",
+  "description": "Source-to-video pipeline: animated Remotion scenes, per-slide TTS narration, subtitles, intro and thumbnail",
+  "scripts": {
+    "video": "node scripts/render_video.mjs",
+    "preview": "node scripts/render_video.mjs --preview",
+    "test:video": "node --test tests/test_video_data.mjs",
+    "typecheck": "tsc --noEmit"
+  },
   "author": "isomoes",
   "repository": {
     "type": "git",
@@ -9,12 +15,17 @@
   },
   "private": true,
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^7.2.0",
-    "chart.js": "4.5.1",
-    "cheerio": "^1.2.0",
-    "decktape": "^3.15.0",
-    "puppeteer": "^24.40.0",
-    "reveal.js": "6.0.0",
-    "reveal.js-plugins": "4.6.0"
+    "@remotion/bundler": "4.0.532",
+    "@remotion/cli": "4.0.532",
+    "@remotion/renderer": "4.0.532",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.532"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "7.0.2"
   }
 }

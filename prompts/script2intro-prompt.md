@@ -25,7 +25,7 @@ Given subtitle files for a rendered presentation, generate a concise video intro
   1. `script.json` fields such as `source`, `url`, `source_url`, or `origin_url`.
   2. The narration text in `script.json` and the burned subtitle text for any explicit URL mentions (`https://...`).
   3. The original user request, recent conversation context, or any input file referenced when the presentation was created.
-  4. `output/<presentation-slug>/presentation.html` and any sibling input files for a `Source:` or `Origin:` annotation.
+  4. Any original source files retained in `output/<presentation-slug>/` for a `Source:` or `Origin:` annotation.
 - If the source content came from a URL (a blog post, article, documentation page, etc.), that URL **must** be preserved verbatim in `intro.txt`.
 - The output URL is deterministic — no discovery needed. Build it from the presentation slug: `https://github.com/isomoes-video/ai-video/tree/main/<presentation-slug>`.
 - Treat slide number order as the source of truth for chapter order.

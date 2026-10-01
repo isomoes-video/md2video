@@ -1,0 +1,10 @@
+{
+  "accent": "#38bdf8",
+  "slides": [
+    {"slide_number": 1, "layout": "title", "title": "从静态幻灯片到动态视频", "subtitle": "Remotion · 动画 · 配音 · 字幕", "model": "GPT-6.1 Sol", "durationSeconds": 3},
+    {"slide_number": 2, "layout": "bullets", "title": "让内容跟着讲解出现", "bullets": ["逐条展示重点，减少信息过载", "用配音时长确定每个场景的长度", "直接渲染视频，不再经过 PDF"], "revealSeconds": [0.3, 1.1, 1.9], "durationSeconds": 3},
+    {"slide_number": 3, "layout": "chart", "title": "用动画展示对比", "subtitle": "示意数据，并非实测结果", "bars": [{"label": "静态画面", "value": 30}, {"label": "分步讲解", "value": 65}, {"label": "动态演示", "value": 90}], "durationSeconds": 3},
+    {"slide_number": 4, "layout": "code", "title": "一条命令生成视频", "code": "bun run video --workspace output/my-video\n\n// slides.json → 动画场景\n// audio/ → 配音和字幕\n// video.mp4 → 成片", "durationSeconds": 3},
+    {"slide_number": 5, "layout": "quote", "title": "内容优先，动画为表达服务", "quote": "让每一次出现、强调和转场，\n都帮助观众理解下一句话。", "durationSeconds": 3}
+  ]
+}
