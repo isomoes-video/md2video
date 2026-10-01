@@ -33,6 +33,7 @@ You are preparing source content for an animated Remotion video and narration.
 - `output/<presentation-slug>/slides.json`: object containing optional `accent` and a non-empty `slides` array, following `video/README.md`.
 - `output/<presentation-slug>/script.json`: array of objects with only `slide_number` and `narration`.
 - Optional preview files stay inside the same workspace under `video-work/`.
+- Scene/title previews are not final covers. Never save a preview frame as `thumbnail.png`; the final cover is generated with Qwen-Image via `prompts/thumbnail-prompt.md` after `intro.txt` is available.
 - Do not call TTS or publish anything until the user approves the scenes and script.
 
 ## Review

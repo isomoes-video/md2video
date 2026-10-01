@@ -41,3 +41,5 @@ bun run video --workspace output/<presentation-slug> --subtitles none --overwrit
 - Intermediate assets and resolved timeline: `output/<presentation-slug>/video-work/`.
 - Review the final MP4 for visual overflow, correct narration ordering, animation timing, and subtitles.
 - Report the final path. Do not upload or publish unless asked.
+- Rendering finishes the video stage, not the entire deliverable. For a complete video workflow, generate `intro.txt` with `prompts/script2intro-prompt.md`, then the required AI cover with `prompts/thumbnail-prompt.md`. An explicitly render-only request can stop at the MP4.
+- Do not extract a video frame or use a Remotion still as `thumbnail.png`. Preview screenshots belong under `video-work/`; the final cover must come from the AI thumbnail stage.

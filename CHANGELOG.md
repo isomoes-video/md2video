@@ -9,6 +9,15 @@ Generated presentation outputs were extracted to the
 [ai-video](https://github.com/isomoes-video/ai-video) repo (mounted as the
 `output/` submodule); deck-only commits live in that repo's history.
 
+## 0.1.6
+
+- feat: replace reveal.js and PDF rendering with Remotion (@isomoes) 2a33bea
+- refactor: remove standalone pipeline dashboard (@isomoes) 92380b8
+- docs: require model name on first slide in slide prompt (@isomoes) 7594073
+- docs: cap video chapters at ten and group them by topic (@isomoes) 3c2dc7a
+- chore(revealjs): default watermark top reserve to 0px in base styles; superseded by the Remotion migration (@isomoes) 373b78e
+- docs(upload): drop mandatory dry-run, publish directly (@isomoes) 3f50ce6
+
 ## 0.1.5
 
 - feat(upload): add Bilibili upload stage (@isomoes) d7870ad

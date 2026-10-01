@@ -1,6 +1,6 @@
 {
   "name": "md2video",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Source-to-video pipeline: animated Remotion scenes, per-slide TTS narration, subtitles, intro and thumbnail",
   "scripts": {
     "video": "node scripts/render_video.mjs",

@@ -2,6 +2,8 @@
 
 `md2video` is a small agent-friendly workflow for turning source content into an animated, narrated video with Remotion. New videos render directly from React scenes, not static PDF pages.
 
+Version **0.1.6** replaces the 0.1.5 reveal.js/PDF renderer with Remotion. See [CHANGELOG.md](CHANGELOG.md) for the full update.
+
 ## What is in this repo
 
 - `prompts/slide-prompt.md`: create animated scene data (`slides.json`) and narration (`script.json`) under `output/<presentation-slug>/`.
