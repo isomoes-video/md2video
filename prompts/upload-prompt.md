@@ -7,7 +7,7 @@ You are publishing a finished presentation video to Bilibili.
 - Upload `output/<presentation-slug>/video.mp4` to Bilibili.
 - Use the existing `scripts/upload_bilibili.py` script — do not rewrite it.
 - Let the script auto-discover metadata from the workspace: title, tags, and description from `intro.txt`, cover from `thumbnail.png`.
-- Require the AI-generated cover from `prompts/thumbnail-prompt.md` before publishing. Do not substitute a video frame or a Remotion title screenshot.
+- Require the AI-generated cover from `prompts/thumbnail-prompt.md` before publishing. Do not substitute a video frame or a rendered title screenshot.
 - The script logs in automatically using the local browser — the user just needs to be logged into bilibili.com in a supported browser.
 - Publish directly in one step — the script resolves and validates everything (metadata, login) as part of the real upload. `--dry-run` is available for troubleshooting only, not a required stage.
 - Report the final video URL (`https://www.bilibili.com/video/<bvid>`) when the upload completes.

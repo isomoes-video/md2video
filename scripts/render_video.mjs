@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
 import {execFileSync, spawn} from 'node:child_process';
 import {validateSlides, parseSrt, buildTimeline} from '../video/data.mjs';
+import {createComposition} from '../video/html.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const exists = async (file) => access(file, constants.F_OK).then(() => true, () => false);
@@ -72,39 +73,38 @@ async function main() {
   const inputProps = {scenes, fps, width: 1920, height: 1080, accent: data.accent ?? '#38bdf8', subtitles: values.subtitles === 'burn'};
   const workDir = path.join(workspace, 'video-work');
   await mkdir(workDir, {recursive: true});
-  const propsPath = path.join(workDir, 'remotion-props.json');
+  const propsPath = path.join(workDir, 'timeline.json');
   await writeFile(propsPath, JSON.stringify(inputProps, null, 2));
-  if (values['prepare-only']) {
-    console.log(`Prepared: ${propsPath}`);
-    return;
-  }
-  // Stage only referenced media, not the whole workspace (which also contains
-  // the bundle and previous videos). This avoids recursive public-dir copying.
-  const publicDir = path.join(workDir, 'public');
-  await mkdir(path.join(publicDir, 'audio'), {recursive: true});
+  // Stage only referenced media and a local animation runtime; no CDN requests.
+  await mkdir(path.join(workDir, 'audio'), {recursive: true});
   for (const scene of scenes) {
-    if (scene.audio) await copyFile(path.join(workspace, scene.audio), path.join(publicDir, scene.audio));
+    if (scene.audio) await copyFile(path.join(workspace, scene.audio), path.join(workDir, scene.audio));
   }
-  if (values.preview) {
-    const cli = path.join(root, 'node_modules', '@remotion', 'cli', 'remotion-cli.js');
-    const child = spawn(process.execPath, [cli, 'studio', path.join(root, 'video/index.tsx'), '--props', propsPath, '--public-dir', publicDir], {stdio: 'inherit', cwd: root});
-    const code = await new Promise((resolve, reject) => {child.on('error', reject); child.on('exit', (code) => resolve(code ?? 1));});
-    process.exitCode = code;
+  await mkdir(path.join(workDir, 'assets'), {recursive: true});
+  await copyFile(path.join(root, 'node_modules/gsap/dist/gsap.min.js'), path.join(workDir, 'assets/gsap.min.js'));
+  await writeFile(path.join(workDir, 'index.html'), createComposition(inputProps));
+  if (values['prepare-only']) {
+    console.log(`Prepared: ${path.join(workDir, 'index.html')}`);
     return;
   }
-  const {bundle} = await import('@remotion/bundler');
-  const {selectComposition, renderMedia} = await import('@remotion/renderer');
-  const serveUrl = await bundle({entryPoint: path.join(root, 'video/index.tsx'), publicDir, outDir: path.join(workDir, 'bundle')});
-  const browserExecutable = values['browser-executable'];
-  const composition = await selectComposition({serveUrl, id: 'NarratedVideo', inputProps, browserExecutable});
-  await renderMedia({serveUrl, composition, inputProps, browserExecutable, concurrency,
-    codec: 'h264', audioCodec: 'aac', pixelFormat: 'yuv420p', outputLocation: output,
-    onProgress: ({progress}) => {if (process.stdout.isTTY) process.stdout.write(`\rRendering ${(progress * 100).toFixed(0)}%`);},
-  });
+  const cli = path.join(root, 'node_modules/hyperframes/bin/hyperframes.mjs');
+  const env = {...process.env};
+  if (values['browser-executable']) {
+    env.HYPERFRAMES_BROWSER_PATH = path.resolve(values['browser-executable']);
+    env.PRODUCER_HEADLESS_SHELL_PATH = env.HYPERFRAMES_BROWSER_PATH;
+  }
+  const args = values.preview
+    ? ['preview', workDir, '--foreground']
+    : ['render', workDir, '--output', output, '--fps', String(fps), '--workers', String(concurrency), '--format', 'mp4', '--strict', '--no-best-effort'];
+  const child = spawn(process.execPath, [cli, ...args], {stdio: 'inherit', cwd: root, env});
+  const code = await new Promise((resolve, reject) => {child.on('error', reject); child.on('exit', (code) => resolve(code ?? 1));});
+  if (code !== 0) throw new Error(`HyperFrames ${values.preview ? 'preview' : 'render'} failed (exit ${code})`);
+  if (values.preview) return;
   const probe = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_type,duration:format=duration', '-of', 'json', output], {encoding: 'utf8'}));
   const duration = Number(probe.format.duration);
   const videoDuration = Number(probe.streams.find((stream) => stream.codec_type === 'video')?.duration);
-  if (!Number.isFinite(videoDuration) || videoDuration + 1 / fps < composition.durationInFrames / fps) throw new Error('Rendered video is shorter than its timeline');
+  const expectedDuration = scenes.reduce((sum, scene) => sum + scene.durationInFrames, 0) / fps;
+  if (!Number.isFinite(videoDuration) || videoDuration + 1 / fps < expectedDuration) throw new Error('Rendered video is shorter than its timeline');
   if (scenes.some((scene) => scene.audio) && !probe.streams.some((stream) => stream.codec_type === 'audio')) throw new Error('Rendered video is missing its narration audio stream');
   console.log(`\nRendered: ${output} (${duration.toFixed(2)}s)`);
 }

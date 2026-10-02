@@ -1,6 +1,6 @@
 # md2video scene prompt
 
-You are preparing source content for an animated Remotion video and narration.
+You are preparing source content for an animated HyperFrames video and narration.
 
 ## Goals
 
@@ -8,7 +8,7 @@ You are preparing source content for an animated Remotion video and narration.
 - Create a dedicated workspace under `output/<presentation-slug>/`.
 - Read `video/README.md` for the scene schema, animation behavior, and preview commands.
 - Produce `slides.json` for the shared renderer and `script.json` for the existing TTS stage.
-- Use the shared Remotion renderer exclusively; it renders animated scenes directly to video.
+- Use the shared HyperFrames renderer exclusively; it renders animated HTML scenes directly to video.
 - Keep visible content concise and narration conversational, with natural continuity between scenes.
 
 ## Language and attribution
@@ -25,7 +25,7 @@ You are preparing source content for an animated Remotion video and narration.
 - Charts must faithfully represent source data. Clearly label any illustrative data.
 - Use a mix of layouts where it serves the explanation, not animation for its own sake.
 - `revealSeconds` optionally times bullet/bar appearances relative to scene start. Omit it until narration duration is known, or verify every time is shorter than that audio clip.
-- Do not use wall-clock CSS animations, timers, or random values. The shared renderer drives animation from Remotion frames.
+- Do not use wall-clock CSS animations, timers, or random values. The shared renderer uses paused GSAP timelines that HyperFrames seeks frame by frame.
 - For custom visual requirements, extend `video/Composition.tsx` and the schema deliberately; never silently emit unsupported fields.
 
 ## Output contract
@@ -38,7 +38,7 @@ You are preparing source content for an animated Remotion video and narration.
 
 ## Review
 
-Run `bun run preview --workspace output/<presentation-slug>` and share the local Remotion Studio URL. Preview allows missing audio, using `durationSeconds` (default 6 seconds) for those scenes. Review layout and animation in Studio, rather than exporting static slides.
+Run `bun run preview --workspace output/<presentation-slug>` and share the local HyperFrames Studio URL. Preview allows missing audio, using `durationSeconds` (default 6 seconds) for those scenes. Review layout and animation in Studio, rather than exporting static slides.
 
 If a file preview is preferred, render an explicitly silent draft:
 

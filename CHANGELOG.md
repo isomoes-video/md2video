@@ -9,6 +9,13 @@ Generated presentation outputs were extracted to the
 [ai-video](https://github.com/isomoes-video/ai-video) repo (mounted as the
 `output/` submodule); deck-only commits live in that repo's history.
 
+## Unreleased
+
+- Replace the renderer with HyperFrames HTML/CSS and seekable GSAP animations, preserving scene JSON, TTS, and SRT inputs.
+- Remove React/Remotion source files and dependencies; rename the five-scene example to `examples/hyperframes-demo/`.
+- Stage HTML, timeline JSON, audio, and local GSAP assets with `--prepare-only`; retain preview, render, and overwrite safeguards.
+- Add HTML-generation regression tests and an opt-in end-to-end audio/caption rendering test.
+
 ## 0.1.6
 
 - feat: replace reveal.js and PDF rendering with Remotion (@isomoes) 2a33bea

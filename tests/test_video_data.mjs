@@ -39,15 +39,20 @@ test('rounds audio duration up and adds gaps only between scenes', () => {
   assert.throws(() => buildTimeline([{...slide, revealSeconds: [1]}], [1], 30, 0), /exceeds/);
 });
 
-test('CLI prepares silent props and refuses missing narration by default', async () => {
+test('CLI prepares silent HTML and refuses missing narration by default', async () => {
   await mkdir('/tmp/opencode', {recursive: true});
   const workspace = await mkdtemp('/tmp/opencode/md2video-test-');
   await writeFile(path.join(workspace, 'slides.json'), JSON.stringify({slides: [slide]}));
   await writeFile(path.join(workspace, 'script.json'), JSON.stringify(script));
   assert.throws(() => execFileSync(process.execPath, ['scripts/render_video.mjs', '--workspace', workspace, '--prepare-only'], {stdio: 'pipe'}), /Missing narration audio/);
   execFileSync(process.execPath, ['scripts/render_video.mjs', '--workspace', workspace, '--silent', '--prepare-only'], {stdio: 'pipe'});
-  const props = JSON.parse(await readFile(path.join(workspace, 'video-work/remotion-props.json'), 'utf8'));
+  const props = JSON.parse(await readFile(path.join(workspace, 'video-work/timeline.json'), 'utf8'));
   assert.equal(props.scenes[0].durationInFrames, 180);
   assert.equal(props.scenes[0].audio, undefined);
   assert.equal(props.width, 1920);
+  const html = await readFile(path.join(workspace, 'video-work/index.html'), 'utf8');
+  assert.match(html, /data-composition-id="md2video"/);
+  assert.match(html, /data-duration="6"/);
+  assert.doesNotMatch(html, /<audio/);
+  assert.ok((await readFile(path.join(workspace, 'video-work/assets/gsap.min.js'))).length > 0);
 });

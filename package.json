@@ -1,11 +1,11 @@
 {
   "name": "md2video",
   "version": "0.1.6",
-  "description": "Source-to-video pipeline: animated Remotion scenes, per-slide TTS narration, subtitles, intro and thumbnail",
+  "description": "Source-to-video pipeline: animated HyperFrames scenes, per-slide TTS narration, subtitles, intro and thumbnail",
   "scripts": {
     "video": "node scripts/render_video.mjs",
     "preview": "node scripts/render_video.mjs --preview",
-    "test:video": "node --test tests/test_video_data.mjs",
+    "test:video": "node --test tests/test_video_*.mjs",
     "typecheck": "tsc --noEmit"
   },
   "author": "isomoes",
@@ -15,17 +15,12 @@
   },
   "private": true,
   "dependencies": {
-    "@remotion/bundler": "4.0.532",
-    "@remotion/cli": "4.0.532",
-    "@remotion/renderer": "4.0.532",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "remotion": "4.0.532"
+    "gsap": "3.15.0",
+    "hyperframes": "0.8.109"
   },
   "devDependencies": {
     "@types/node": "26.6.3",
-    "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0",
     "typescript": "7.0.2"
-  }
+  },
+  "engines": {"node": ">=22"}
 }
