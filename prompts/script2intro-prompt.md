@@ -2,6 +2,8 @@
 
 You are generating a concise video introduction from subtitle timing and narration content.
 
+Follow `prompts/README.md`: execute automatically through the requested stopping point, without unsolicited preview or approval checkpoints.
+
 ## Task
 
 Given subtitle files for a rendered presentation, generate a concise video introduction with six parts:

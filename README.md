@@ -29,7 +29,7 @@ bun run video --workspace examples/hyperframes-demo --silent
 
 1. Start with either a source file such as `source.md` or a direct text prompt.
 2. Use `prompts/slide-prompt.md` to create a presentation workspace under `output/<presentation-slug>/`.
-3. Review animations with `bun run preview --workspace output/<presentation-slug>` and decide whether to continue.
+3. Validate scenes and narration, then continue automatically. Preview is opt-in: use `bun run preview --workspace output/<presentation-slug>` only when requested.
 4. Use `prompts/tts-prompt.md` to create `output/<presentation-slug>/audio/slide-XX.mp3` files.
 5. Use `prompts/combine-prompt.md`, or run `bun run video --workspace output/<presentation-slug>`, to create `video.mp4` directly with HyperFrames.
 6. Optionally use `prompts/script2intro-prompt.md` to create `output/<presentation-slug>/intro.txt`.
@@ -39,6 +39,8 @@ bun run video --workspace examples/hyperframes-demo --silent
 ## Notes
 
 The prompt files are stage-specific on purpose. Pick the prompt that matches the artifact you want to generate, and keep all outputs for a presentation in the same `output/<presentation-slug>/` directory.
+
+Follow [the workflow defaults](prompts/README.md): complete requested stages automatically without preview or approval pauses, stopping only at the user's requested boundary or a genuine blocker. A complete video request includes the MP4, intro, and AI cover; “do not upload” still completes those local artifacts. Uploading, publishing, committing, and pushing require an explicit request.
 
 HyperFrames is the only supported renderer. Workspaces need scene data, narration, and audio. Existing generated artifacts are not migrated or deleted automatically. See [video/README.md](video/README.md) for requirements and limitations.
 

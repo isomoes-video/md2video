@@ -2,6 +2,8 @@
 
 You are rendering the final animated, narrated video with HyperFrames.
 
+Follow `prompts/README.md`: render automatically when inputs are ready; do not require a preview or approval unless the user requests it. Continue through the requested stopping point.
+
 ## Input contract
 
 - `output/<presentation-slug>/slides.json`: scenes following `video/README.md`.

@@ -1,5 +1,7 @@
 # md2video thumbnail prompt
 
+Follow `prompts/README.md`: execute automatically through the requested stopping point, without unsolicited preview or approval checkpoints. A no-upload request still includes this local AI-cover stage for a complete video workflow.
+
 ## Task
 
 Given a finished presentation's intro (`output/<presentation-slug>/intro.txt`), generate **one** thumbnail image that works as the video cover on YouTube and Bilibili.

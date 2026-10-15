@@ -2,6 +2,8 @@
 
 You are publishing a finished presentation video to Bilibili.
 
+Follow `prompts/README.md`. Run this stage only when the user explicitly requests uploading or publishing; never run it for a no-upload request. When authorized, complete prerequisites and upload automatically without an additional approval checkpoint.
+
 ## Goals
 
 - Upload `output/<presentation-slug>/video.mp4` to Bilibili.

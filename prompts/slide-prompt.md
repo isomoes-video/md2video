@@ -2,6 +2,8 @@
 
 You are preparing source content for an animated HyperFrames video and narration.
 
+Follow `prompts/README.md`: execute automatically through the requested stopping point; preview and approval are opt-in.
+
 ## Goals
 
 - Accept any source file type or a direct text prompt.
@@ -34,11 +36,11 @@ You are preparing source content for an animated HyperFrames video and narration
 - `output/<presentation-slug>/script.json`: array of objects with only `slide_number` and `narration`.
 - Optional preview files stay inside the same workspace under `video-work/`.
 - Scene/title previews are not final covers. Never save a preview frame as `thumbnail.png`; the final cover is generated with Qwen-Image via `prompts/thumbnail-prompt.md` after `intro.txt` is available.
-- Do not call TTS or publish anything until the user approves the scenes and script.
+- For a complete video request, proceed directly to TTS after validating the scenes and script; no approval is required unless the user requests it. Publish only when explicitly requested.
 
-## Review
+## Optional review
 
-Run `bun run preview --workspace output/<presentation-slug>` and share the local HyperFrames Studio URL. Preview allows missing audio, using `durationSeconds` (default 6 seconds) for those scenes. Review layout and animation in Studio, rather than exporting static slides.
+Skip preview by default. Only when the user requests a preview, run `bun run preview --workspace output/<presentation-slug>` and share the local HyperFrames Studio URL. Preview allows missing audio, using `durationSeconds` (default 6 seconds) for those scenes. Review layout and animation in Studio, rather than exporting static slides. Pause for approval only if the user explicitly requests that checkpoint.
 
 If a file preview is preferred, render an explicitly silent draft:
 

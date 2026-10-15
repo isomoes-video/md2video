@@ -1,6 +1,8 @@
 # md2video tts prompt
 
-You are generating narration audio from approved script content.
+You are generating narration audio from validated script content.
+
+Follow `prompts/README.md`: execute automatically through the requested stopping point. Script approval is not required unless the user requests it.
 
 ## Goals
 
