@@ -70,8 +70,25 @@ async function main() {
     console.log(`Slide ${slide.slide_number}: ${slide.title} → ${audio ?? '(no audio)'} (${seconds.toFixed(3)}s)`);
   }
   const scenes = buildTimeline(data.slides, durations, fps, Number(values['slide-gap'])).map((scene, i) => ({...scene, ...media[i]}));
-  const inputProps = {scenes, fps, width: 1920, height: 1080, accent: data.accent ?? '#38bdf8', subtitles: values.subtitles === 'burn'};
   const workDir = path.join(workspace, 'video-work');
+  const imageDir = path.join(workDir, 'assets/images');
+  // Copy referenced images into the bundle and rewrite scene paths relative to video-work.
+  for (const scene of scenes) {
+    if (scene.layout !== 'image') continue;
+    const source = path.resolve(workspace, scene.image);
+    const relative = path.relative(workspace, source);
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+      throw new Error(`Slide ${scene.slide_number} image must stay inside the workspace: ${scene.image}`);
+    }
+    if (!await exists(source)) throw new Error(`Missing image for slide ${scene.slide_number}: ${scene.image}`);
+    await mkdir(imageDir, {recursive: true});
+    const extension = path.extname(source).toLowerCase();
+    const stem = path.basename(source, path.extname(source)).replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'image';
+    const staged = `slide-${String(scene.slide_number).padStart(2, '0')}-${stem}${extension}`;
+    await copyFile(source, path.join(imageDir, staged));
+    scene.image = `assets/images/${staged}`;
+  }
+  const inputProps = {scenes, fps, width: 1920, height: 1080, accent: data.accent ?? '#38bdf8', subtitles: values.subtitles === 'burn'};
   await mkdir(workDir, {recursive: true});
   const propsPath = path.join(workDir, 'timeline.json');
   await writeFile(propsPath, JSON.stringify(inputProps, null, 2));

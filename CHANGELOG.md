@@ -11,6 +11,7 @@ Generated presentation outputs were extracted to the
 
 ## Unreleased
 
+- Add an `image` layout with optional intro text and caption; local PNG/JPEG/WebP/GIF files are validated and staged into `video-work/assets/images/`.
 - Replace the renderer with HyperFrames HTML/CSS and seekable GSAP animations, preserving scene JSON, TTS, and SRT inputs.
 - Remove React/Remotion source files and dependencies; rename the five-scene example to `examples/hyperframes-demo/`.
 - Stage HTML, timeline JSON, audio, and local GSAP assets with `--prepare-only`; retain preview, render, and overwrite safeguards.

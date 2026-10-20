@@ -28,6 +28,7 @@ Use `--overwrite` to replace an existing MP4. `--silent` explicitly skips audio 
 output/my-video/
   slides.json
   script.json
+  images/diagram.png     # local images referenced by image layouts
   audio/slide-01.mp3
   audio/slide-01.srt       # optional, scene-relative times
   video-work/             # index.html, timeline.json, assets/ and staged audio/
@@ -61,6 +62,14 @@ output/my-video/
       "layout": "bullets",
       "title": "三个重点",
       "bullets": ["动态场景", "同步配音", "直接输出视频"]
+    },
+    {
+      "slide_number": 3,
+      "layout": "image",
+      "title": "系统架构",
+      "image": "images/architecture.png",
+      "text": "左侧是架构图，右侧用一句话说明关键变化。",
+      "caption": "图 1 · 架构示意"
     }
   ]
 }
@@ -79,10 +88,11 @@ Every scene needs `slide_number`, `layout`, and `title`. Optional common fields:
 | `chart` | `bars`: 1–6 `{label, value}` objects; optional `unit` | Horizontal bars grow; values must be non-negative |
 | `code` | `code`: string | Code block fade and rise |
 | `quote` | `quote`: string; optional `attribution` | Quote fade and rise |
+| `image` | `image` (required): relative path to a PNG/JPEG/WebP/GIF inside the workspace; optional `text` (intro paragraph, ≤200 chars), `caption` (≤80 chars), `alt` | Image fades in first, then the caption and intro text |
 
-Automatic reveals are compact and occur within narration time. For closer speech alignment, set `revealSeconds` after TTS or use the SRT cue times to choose them manually. They must be ordered, non-negative, and strictly shorter than the audio duration. Subtitles are synchronized to their SRT timestamps; bullet reveals do not automatically follow word timestamps.
+Automatic reveals are compact and occur within narration time. For closer speech alignment, set `revealSeconds` after TTS or use the SRT cue times to choose them manually. They must be ordered, non-negative, and strictly shorter than the audio duration. For `image` scenes the order is image, caption, then text. Subtitles are synchronized to their SRT timestamps; bullet reveals do not automatically follow word timestamps.
 
-Keep titles short, bullets to roughly one line each, and code to roughly 12 short lines. The renderer does not automatically paginate overflowing text. Bar charts show relative magnitude, not a full scientific chart axis. Unsupported visuals (images, line charts, syntax highlighting, complex diagrams) require extending the shared HTML generator and data validation; they are not built in yet.
+Keep titles short, bullets to roughly one line each, and code to roughly 12 short lines. The renderer does not automatically paginate overflowing text. Bar charts show relative magnitude, not a full scientific chart axis. For the `image` layout, put local image files in the workspace (for example `images/diagram.png`) and reference them with a relative path; absolute paths, `..` traversal, and remote URLs are rejected. Images are staged into `video-work/assets/images/` during preparation, and a missing file is an error. Use `text` for a short introduction shown beside the figure, and `caption` for a label under it. Unsupported visuals (line charts, syntax highlighting, complex diagrams, and animated media) require extending the shared HTML generator and data validation; they are not built in yet.
 
 ## Options and checks
 

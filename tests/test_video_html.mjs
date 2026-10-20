@@ -10,6 +10,7 @@ const slides = [
   {slide_number: 3, layout: 'chart', title: 'Chart', bars: [{label: 'zero', value: 0}, {label: 'full', value: 100}], unit: '%'},
   {slide_number: 4, layout: 'code', title: 'Code', code: '</script><img src=x onerror=alert(1)>'},
   {slide_number: 5, layout: 'quote', title: 'Quote', quote: 'hello\nworld', attribution: 'Author'},
+  {slide_number: 6, layout: 'image', title: 'Figure', image: 'assets/images/slide-06-arch.png', alt: 'Arch <diagram>', text: 'intro <text>', caption: 'caption & note'},
 ];
 const props = () => ({
   scenes: buildTimeline(slides, slides.map(() => 3), 30, 0.25).map((scene, i) => ({
@@ -27,8 +28,12 @@ test('HTML composition preserves all layouts and escapes user content', () => {
   assert.match(html, /class="bar-track"/);
   assert.match(html, /<pre>&lt;\/script&gt;/);
   assert.match(html, /<blockquote>hello\nworld/);
+  assert.match(html, /<img class="figure" src="assets\/images\/slide-06-arch.png" alt="Arch &lt;diagram&gt;">/);
+  assert.match(html, /class="figure-text">intro &lt;text&gt;/);
+  assert.match(html, /class="figure-caption">caption &amp; note/);
+  assert.match(html, /image-layout with-text/);
   assert.match(html, /Test model/);
-  assert.equal((html.match(/class="clip scene"/g) ?? []).length, 5);
+  assert.equal((html.match(/class="clip scene"/g) ?? []).length, 6);
   assert.match(html, /src="assets\/gsap.min.js"/);
   assert.doesNotMatch(html, /https?:\/\//);
 });
@@ -53,7 +58,8 @@ test('schedules audio, reveals, captions, and fades on a paused global clock', (
   assert.equal(cue[1].args[2], secondStart + 1.2);
   const fade = calls.find((call) => call.args[0] === '#scene-2');
   assert.equal(fade.args[3] + fade.args[2].duration, input.scenes[2].from / 30);
-  assert.equal(calls.at(-1).args[1].duration, 482 / 30);
+  const total = input.scenes.at(-1).from + input.scenes.at(-1).durationInFrames;
+  assert.equal(calls.at(-1).args[1].duration, total / 30);
 });
 
 test('disables captions and clips late cues to narration duration', () => {

@@ -10,6 +10,7 @@ Follow `prompts/README.md`: render automatically when inputs are ready; do not r
 - `output/<presentation-slug>/script.json`: one narration entry per scene.
 - `output/<presentation-slug>/audio/slide-XX.mp3`: one narration clip per scene.
 - Optional matching `slide-XX.srt`: scene-relative subtitle cues.
+- Optional local images referenced by `image` scenes, stored inside the workspace with relative paths.
 - Scene and script numbers must be ordered consecutively from 1, with equal counts.
 - Extra, duplicate, or missing audio is an error. Never use `--silent` for the final narrated video.
 
@@ -35,7 +36,7 @@ bun run video --workspace output/<presentation-slug> --subtitles none --overwrit
 - Available SRT cues are burned into the picture by default. Missing SRT does not block rendering; the current OpenAI TTS backend does not generate SRT.
 - The output is a 1920×1080 H.264/AAC MP4 at 30 fps by default (`--fps` is configurable).
 - `--concurrency` controls rendering workers (default 2); `--browser-executable` optionally selects an existing Chromium executable.
-- `--prepare-only` validates inputs and writes HTML, timeline JSON, and local assets without encoding.
+- `--prepare-only` validates inputs and writes HTML, timeline JSON, and local assets without encoding, including copied images under `video-work/assets/images/`. Missing or out-of-workspace image files fail preparation.
 
 ## Output and review
 

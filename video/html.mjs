@@ -8,7 +8,8 @@ export function createComposition({scenes, fps, width, height, accent, subtitles
     const id = `scene-${scene.slide_number}`;
     const start = scene.from / fps;
     const length = scene.durationInFrames / fps;
-    const count = scene.bullets?.length ?? scene.bars?.length ?? 1;
+    const count = scene.bullets?.length ?? scene.bars?.length
+      ?? (scene.layout === 'image' ? 1 + (scene.text ? 1 : 0) + (scene.caption ? 1 : 0) : 1);
     const revealAt = (i) => scene.revealSeconds?.[i] !== undefined
       ? Math.round(scene.revealSeconds[i] * fps) / fps
       : Math.round(Math.min(fps * (0.55 + i * 0.7), scene.narrationFrames * (i + 1) / (count + 2))) / fps;
@@ -30,6 +31,14 @@ export function createComposition({scenes, fps, width, height, accent, subtitles
     }
     if (scene.layout === 'code') content += reveal('code', `<pre>${escapeHtml(scene.code)}</pre>`, revealAt(0));
     if (scene.layout === 'quote') content += reveal('quote', `<blockquote>${escapeHtml(scene.quote)}<div class="attribution">${escapeHtml(scene.attribution)}</div></blockquote>`, revealAt(0));
+    if (scene.layout === 'image') {
+      const withText = typeof scene.text === 'string' && scene.text.trim();
+      let index = 0;
+      let column = reveal('image', `<img class="figure" src="${escapeHtml(scene.image)}" alt="${escapeHtml(scene.alt || scene.title)}">`, revealAt(index++));
+      if (scene.caption) column += reveal('caption', `<div class="figure-caption">${escapeHtml(scene.caption)}</div>`, revealAt(index++));
+      const intro = withText ? reveal('text', `<div class="figure-text">${escapeHtml(scene.text)}</div>`, revealAt(index)) : '';
+      content += `<div class="image-layout${withText ? ' with-text' : ''}"><div class="figure-col">${column}</div>${intro}</div>`;
+    }
     if (subtitles) content += scene.cues.map((cue, i) => {
       const end = Math.min(cue.end, scene.narrationFrames / fps);
       if (cue.start >= end) return '';
@@ -67,6 +76,13 @@ h1.hero { font-size: 88px; }
 pre { font-size: 30px; line-height: 1.45; padding: 32px; border-radius: 18px; background: #162137; white-space: pre-wrap; overflow-wrap: anywhere; color: #c4e4ff; }
 blockquote { margin: 55px 0; border-left: 8px solid var(--accent); padding-left: 40px; font-size: 48px; line-height: 1.5; white-space: pre-line; }
 .attribution { font-size: 26px; color: #94a3b8; margin-top: 25px; }
+.image-layout { display: grid; gap: 54px; align-items: center; margin-top: 24px; }
+.image-layout.with-text { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+.figure-col { display: grid; gap: 16px; justify-items: center; min-width: 0; }
+.figure { display: block; max-width: 100%; max-height: 560px; border-radius: 16px; object-fit: contain; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); }
+.image-layout:not(.with-text) .figure { max-height: 620px; }
+.figure-caption { font-size: 24px; line-height: 1.4; color: #94a3b8; text-align: center; }
+.figure-text { font-size: 34px; line-height: 1.55; color: #dbe4f3; white-space: pre-line; overflow-wrap: anywhere; border-left: 5px solid var(--accent); padding-left: 28px; }
 .counter { position: absolute; bottom: 36px; right: 70px; font-size: 23px; color: #94a3b8; }
 .caption { opacity: 0; position: absolute; bottom: 82px; left: 100px; right: 100px; text-align: center; white-space: pre-line; font-size: 32px; line-height: 1.4; padding: 12px 22px; border-radius: 12px; background: rgba(0,0,0,0.8); }
 </style></head><body>

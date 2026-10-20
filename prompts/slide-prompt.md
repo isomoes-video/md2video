@@ -21,14 +21,16 @@ Follow `prompts/README.md`: execute automatically through the requested stopping
 
 ## Scene requirements
 
-- Choose among `title`, `bullets`, `chart`, `code`, and `quote` layouts.
+- Choose among `title`, `bullets`, `chart`, `code`, `quote`, and `image` layouts.
+- For `image` scenes, keep the source picture inside the workspace (for example `images/architecture.png`) and set `image` to that relative path. Supported files are PNG, JPEG, WebP, and GIF; remote URLs, absolute paths, and `..` traversal are rejected. Copy the image into the workspace first when the source provides one.
+- Use `text` for a short introduction shown beside the image, and `caption` for a concise label under it. Omit `text` when the picture should stand alone. Describe meaningful images in `alt`.
 - Use consecutive `slide_number` values starting at 1 in both JSON files.
-- Use 1–6 short bullets or bars per scene; keep code to roughly 12 short lines. Avoid text overflow.
+- Use 1–6 short bullets or bars per scene; keep code to roughly 12 short lines. Avoid text overflow. Keep image intro text to a few short lines so it fits beside the figure.
 - Charts must faithfully represent source data. Clearly label any illustrative data.
 - Use a mix of layouts where it serves the explanation, not animation for its own sake.
-- `revealSeconds` optionally times bullet/bar appearances relative to scene start. Omit it until narration duration is known, or verify every time is shorter than that audio clip.
+- `revealSeconds` optionally times bullet/bar appearances relative to scene start. For `image` scenes the order is image, caption, then text. Omit it until narration duration is known, or verify every time is shorter than that audio clip.
 - Do not use wall-clock CSS animations, timers, or random values. The shared renderer uses paused GSAP timelines that HyperFrames seeks frame by frame.
-- For custom visual requirements, extend `video/Composition.tsx` and the schema deliberately; never silently emit unsupported fields.
+- For custom visual requirements, extend `video/html.mjs` and `video/data.mjs` deliberately; never silently emit unsupported fields.
 
 ## Output contract
 

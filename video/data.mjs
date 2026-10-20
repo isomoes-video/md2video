@@ -9,7 +9,8 @@ export function validateSlides(data, script) {
   if (data.accent !== undefined && !/^#[0-9a-f]{6}$/i.test(data.accent)) {
     throw new Error('accent must be a six-digit hex color');
   }
-  const layouts = ['title', 'bullets', 'chart', 'code', 'quote'];
+  const layouts = ['title', 'bullets', 'chart', 'code', 'quote', 'image'];
+  const imagePattern = /\.(png|jpe?g|webp|gif)$/i;
   data.slides.forEach((slide, index) => {
     const number = index + 1;
     if (slide.slide_number !== number || script[index]?.slide_number !== number) {
@@ -35,6 +36,30 @@ export function validateSlides(data, script) {
     }
     if (slide.layout === 'quote' && (typeof slide.quote !== 'string' || !slide.quote.trim())) {
       throw new Error(`Slide ${number} needs quote text`);
+    }
+    if (slide.layout === 'image') {
+      if (typeof slide.image !== 'string' || !slide.image.trim()) {
+        throw new Error(`Slide ${number} needs an image path`);
+      }
+      const image = slide.image.trim();
+      if (/^[\\/]|^[a-z]:[\\/]/i.test(image) || image.split(/[\\/]/).includes('..')) {
+        throw new Error(`Slide ${number} image must be a relative path inside the workspace`);
+      }
+      if (!imagePattern.test(image)) {
+        throw new Error(`Slide ${number} image must be a PNG, JPEG, WebP, or GIF file`);
+      }
+    }
+    if (slide.layout === 'image' && slide.text !== undefined &&
+      (typeof slide.text !== 'string' || !slide.text.trim() || slide.text.length > 200)) {
+      throw new Error(`Slide ${number} text must be a non-empty string of at most 200 characters`);
+    }
+    if (slide.layout === 'image' && slide.caption !== undefined &&
+      (typeof slide.caption !== 'string' || !slide.caption.trim() || slide.caption.length > 80)) {
+      throw new Error(`Slide ${number} caption must be a non-empty string of at most 80 characters`);
+    }
+    if (slide.layout === 'image' && slide.alt !== undefined &&
+      (typeof slide.alt !== 'string' || !slide.alt.trim() || slide.alt.length > 160)) {
+      throw new Error(`Slide ${number} alt must be a non-empty string of at most 160 characters`);
     }
     if (slide.durationSeconds !== undefined && (!Number.isFinite(slide.durationSeconds) || slide.durationSeconds <= 0)) {
       throw new Error(`Slide ${number} durationSeconds must be positive`);
