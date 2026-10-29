@@ -11,6 +11,7 @@ Generated presentation outputs were extracted to the
 
 ## Unreleased
 
+- Fix Bilibili browser login selection: verify complete sessions individually, skip logged-out browsers without mixing cookies, and distinguish API failures from logout. Validate Chromium host bindings/padding and use bounded Linux keyring lookups.
 - Add an `image` layout with optional intro text and caption; local PNG/JPEG/WebP/GIF files are validated and staged into `video-work/assets/images/`.
 - Replace the renderer with HyperFrames HTML/CSS and seekable GSAP animations, preserving scene JSON, TTS, and SRT inputs.
 - Remove React/Remotion source files and dependencies; rename the five-scene example to `examples/hyperframes-demo/`.

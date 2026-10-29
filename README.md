@@ -19,6 +19,8 @@ The renderer uses HyperFrames while preserving the existing scene JSON, narratio
 - `scripts/thumbnail_from_prompt.py`: standalone `uv run` thumbnail image helper.
 - `scripts/upload_bilibili.py`: standalone `uv run` Bilibili uploader; reads login cookies straight from the local browser.
 
+The uploader checks each browser session with Bilibili's read-only login API and uses the first verified session with both `SESSDATA` and `bili_jct`, never mixing cookies between browsers. Use `--browser firefox` (or another supported browser) to restrict selection. Login checks have a 5-second connection limit and a 10-second total limit; API/network errors fail closed if no session can be verified. On Linux, encrypted Chromium `v11` cookies require `secret-tool` (`libsecret` / `libsecret-tools`) and an unlocked desktop keyring; keyring lookup times out after 10 seconds. Chromium host bindings are checked against the cookie database version.
+
 ## Intended workflow
 
 Install dependencies with `bun install`; Node.js 22+ and FFmpeg/FFprobe must be available. HyperFrames provisions a headless browser when needed. For a quick animation demo:

@@ -26,7 +26,7 @@ Follow `prompts/README.md`. Run this stage only when the user explicitly request
   - `HH:MM  Chapter` lines → parsed only so they stay out of the summary; not added to the description.
   - Description = summary + source joined by blank lines, truncated to 2000 characters.
 - `output/<presentation-slug>/thumbnail.png` — required AI cover, produced with `qwen-image-2.0-pro` by the thumbnail stage, with its saved `thumbnail-prompt.txt`. Confirm a successful AI-generation run; file existence alone is insufficient. The script has a frame-extraction fallback, but **do not invoke that fallback in this workflow**.
-- Login: the user must be logged into bilibili.com in a supported browser (Chrome / Chromium / Edge / Brave / Vivaldi / Opera / Firefox). The script reads the login automatically; the freshest valid login across browsers wins.
+- Login: the user must be logged into bilibili.com in a supported browser (Chrome / Chromium / Edge / Brave / Vivaldi / Opera / Firefox). The script selects the first complete session verified by Bilibili's read-only login API; cookies from different browsers are never combined. `--browser` restricts selection to that browser.
 - Fail clearly when `video.mp4` is missing or no browser login can be found; do not improvise credentials.
 
 ## Output contract
@@ -72,6 +72,8 @@ uv run scripts/upload_bilibili.py --workspace output/<presentation-slug> --dry-r
 
 - `Not logged in` / `Incomplete login` — log into bilibili.com in a supported browser, then retry. If the login has expired, re-log in.
 - Use `--debug` to see which browsers were scanned, and `--browser <name>` to pin one.
+- Logged-out browsers are skipped. Network/API failures are not treated as logout; if no session can be verified, the upload stops rather than using unchecked credentials.
+- Linux Chromium `v10` cookies use the legacy key; `v11` cookies require `secret-tool` (`libsecret` / `libsecret-tools`) and an unlocked desktop keyring. Keyring lookup is limited to 10 seconds. Database version 24+ host bindings and padding are validated; cookie values and secrets are not logged.
 
 ## Implementation notes (for reference only)
 

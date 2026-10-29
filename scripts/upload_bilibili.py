@@ -4,7 +4,6 @@
 #   "bilibili-api-python==17.4.1",
 #   "curl_cffi>=0.7.0",
 #   "pycryptodome>=3.20.0",
-#   "secretstorage>=3.3.3; sys_platform == 'linux'",
 # ]
 # ///
 """Upload a finished presentation video to Bilibili.
@@ -28,6 +27,8 @@ Examples
 from __future__ import annotations
 
 import argparse
+import hashlib
+import hmac
 import os
 import re
 import shutil
@@ -103,11 +104,33 @@ def supported_browsers() -> list[Browser]:
     if sys.platform.startswith("linux"):
         config = home / ".config"
         return [
-            Browser("chrome", "chromium", [config / "google-chrome/Default/Cookies"], "Chrome"),
-            Browser("chromium", "chromium", [config / "chromium/Default/Cookies"], "Chromium"),
-            Browser("edge", "chromium", [config / "microsoft-edge/Default/Cookies"], "Microsoft Edge"),
-            Browser("brave", "chromium", [config / "BraveSoftware/Brave-Browser/Default/Cookies"], "Brave"),
-            Browser("vivaldi", "chromium", [config / "vivaldi/Default/Cookies"], "Vivaldi"),
+            Browser(
+                "chrome",
+                "chromium",
+                [config / "google-chrome/Default/Cookies"],
+                "Chrome",
+            ),
+            Browser(
+                "chromium",
+                "chromium",
+                [config / "chromium/Default/Cookies"],
+                "Chromium",
+            ),
+            Browser(
+                "edge",
+                "chromium",
+                [config / "microsoft-edge/Default/Cookies"],
+                "Microsoft Edge",
+            ),
+            Browser(
+                "brave",
+                "chromium",
+                [config / "BraveSoftware/Brave-Browser/Default/Cookies"],
+                "Brave",
+            ),
+            Browser(
+                "vivaldi", "chromium", [config / "vivaldi/Default/Cookies"], "Vivaldi"
+            ),
             Browser("opera", "chromium", [config / "opera/Default/Cookies"], "Opera"),
             Browser(
                 "firefox",
@@ -122,21 +145,59 @@ def supported_browsers() -> list[Browser]:
     if sys.platform == "darwin":
         app = home / "Library/Application Support"
         return [
-            Browser("chrome", "chromium", [app / "Google/Chrome/Default/Cookies"], "Chrome"),
-            Browser("chromium", "chromium", [app / "Chromium/Default/Cookies"], "Chromium"),
-            Browser("edge", "chromium", [app / "Microsoft Edge/Default/Cookies"], "Microsoft Edge"),
-            Browser("brave", "chromium", [app / "BraveSoftware/Brave-Browser/Default/Cookies"], "Brave"),
-            Browser("opera", "chromium", [app / "com.operasoftware.Opera/Default/Cookies"], "Opera"),
+            Browser(
+                "chrome", "chromium", [app / "Google/Chrome/Default/Cookies"], "Chrome"
+            ),
+            Browser(
+                "chromium", "chromium", [app / "Chromium/Default/Cookies"], "Chromium"
+            ),
+            Browser(
+                "edge",
+                "chromium",
+                [app / "Microsoft Edge/Default/Cookies"],
+                "Microsoft Edge",
+            ),
+            Browser(
+                "brave",
+                "chromium",
+                [app / "BraveSoftware/Brave-Browser/Default/Cookies"],
+                "Brave",
+            ),
+            Browser(
+                "opera",
+                "chromium",
+                [app / "com.operasoftware.Opera/Default/Cookies"],
+                "Opera",
+            ),
             Browser("firefox", "firefox", [app / "Firefox/Profiles"]),
         ]
     if os.name == "nt":
         local = Path(os.environ.get("LOCALAPPDATA", home / "AppData/Local"))
         roaming = Path(os.environ.get("APPDATA", home / "AppData/Roaming"))
         return [
-            Browser("chrome", "chromium", [local / "Google/Chrome/User Data/Default/Network/Cookies"]),
-            Browser("chromium", "chromium", [local / "Chromium/User Data/Default/Network/Cookies"]),
-            Browser("edge", "chromium", [local / "Microsoft/Edge/User Data/Default/Network/Cookies"]),
-            Browser("brave", "chromium", [local / "BraveSoftware/Brave-Browser/User Data/Default/Network/Cookies"]),
+            Browser(
+                "chrome",
+                "chromium",
+                [local / "Google/Chrome/User Data/Default/Network/Cookies"],
+            ),
+            Browser(
+                "chromium",
+                "chromium",
+                [local / "Chromium/User Data/Default/Network/Cookies"],
+            ),
+            Browser(
+                "edge",
+                "chromium",
+                [local / "Microsoft/Edge/User Data/Default/Network/Cookies"],
+            ),
+            Browser(
+                "brave",
+                "chromium",
+                [
+                    local
+                    / "BraveSoftware/Brave-Browser/User Data/Default/Network/Cookies"
+                ],
+            ),
             Browser("firefox", "firefox", [roaming / "Mozilla/Firefox/Profiles"]),
         ]
     return []
@@ -147,7 +208,9 @@ def _read_sqlite_rows(db_path: Path, query: str) -> list[tuple]:
     with tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False) as tmp:
         tmp_path = Path(tmp.name)
     try:
-        shutil.copy2(db_path, tmp_path)
+        # Preserve the private temporary file's permissions, not the browser DB's.
+        with db_path.open("rb") as source, tmp_path.open("wb") as target:
+            shutil.copyfileobj(source, target)
         conn = sqlite3.connect(f"file:{tmp_path}?immutable=1", uri=True)
         try:
             return list(conn.execute(query))
@@ -163,12 +226,29 @@ def _read_chromium(browser: Browser, db_path: Path, domain: str) -> list[Cookie]
         "SELECT name, value, encrypted_value, host_key, expires_utc "
         "FROM cookies WHERE host_key LIKE '%bilibili.com'",
     )
-    key = _chromium_key(browser)
+    versions = _read_sqlite_rows(
+        db_path, "SELECT value FROM meta WHERE key = 'version'"
+    )
+    if not versions:
+        raise ValueError("Missing Chromium cookie database version")
+    version = int(versions[0][0])
+    key = None
     cookies: list[Cookie] = []
     for name, value, encrypted_value, host_key, expires_utc in rows:
-        if domain not in host_key:
+        if not _matches_domain(host_key, domain):
             continue
-        plain = value or _decrypt_chromium_value(encrypted_value, key)
+        if (
+            not value
+            and encrypted_value
+            and (encrypted_value.startswith(b"v11") or sys.platform == "darwin")
+            and key is None
+        ):
+            key = _chromium_key(browser)
+            if key is None:
+                raise RuntimeError("Chromium key unavailable")
+        plain = value or _decrypt_chromium_value(
+            encrypted_value, key, host_key, version
+        )
         if not plain:
             continue
         expires = None
@@ -185,7 +265,7 @@ def _read_firefox(db_path: Path, domain: str) -> list[Cookie]:
     )
     cookies: list[Cookie] = []
     for name, value, host, expiry in rows:
-        if domain not in host or not value:
+        if not _matches_domain(host, domain) or not value:
             continue
         cookies.append(Cookie(name, value, host, int(expiry) if expiry else None))
     return cookies
@@ -201,8 +281,8 @@ def _chromium_key(browser: Browser) -> bytes | None:
             return _linux_chromium_key(browser.keyring_label)
         if sys.platform == "darwin":
             return _macos_chromium_key(browser.keyring_label)
-    except Exception as exc:  # noqa: BLE001 - degrade to manual cookies
-        _debug(f"could not derive {browser.name} key: {exc}")
+    except Exception:  # noqa: BLE001 - never log secrets from keyring errors
+        _debug(f"could not derive {browser.name} key; unlock the desktop keyring")
     return None
 
 
@@ -210,49 +290,67 @@ def _pbkdf2_aes_key(password: bytes, iterations: int) -> bytes:
     from Crypto.Hash import SHA1
     from Crypto.Protocol.KDF import PBKDF2
 
-    return PBKDF2(password, b"saltysalt", dkLen=16, count=iterations, hmac_hash_module=SHA1)
+    return PBKDF2(
+        password, b"saltysalt", dkLen=16, count=iterations, hmac_hash_module=SHA1
+    )
 
 
 def _linux_chromium_key(keyring_label: str) -> bytes:
-    password = b"peanuts"  # fallback used by Chromium when no keyring is present
-    if keyring_label:
-        try:
-            import secretstorage
-
-            bus = secretstorage.dbus_init()
-            collection = secretstorage.get_default_collection(bus)
-            if collection.is_locked():
-                collection.unlock()
-            wanted = f"{keyring_label} Safe Storage"
-            for item in collection.get_all_items():
-                if item.get_label() == wanted:
-                    password = item.get_secret()
-                    break
-        except Exception as exc:  # noqa: BLE001
-            _debug(f"keyring lookup failed ({keyring_label}): {exc}; using fallback")
+    applications = {
+        "Chrome": "chrome",
+        "Chromium": "chromium",
+        "Microsoft Edge": "microsoft-edge",
+        "Brave": "brave",
+        "Vivaldi": "vivaldi",
+        "Opera": "opera",
+    }
+    application = applications.get(keyring_label)
+    if not application:
+        raise RuntimeError("Unknown Chromium keyring application")
+    result = subprocess.run(
+        ["secret-tool", "lookup", "application", application],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        timeout=10,
+        check=False,
+    )
+    password = result.stdout.removesuffix(b"\n")
+    if result.returncode != 0 or not password:
+        raise RuntimeError("Chromium key unavailable; unlock your desktop keyring")
     return _pbkdf2_aes_key(password, iterations=1)
 
 
 def _macos_chromium_key(keyring_label: str) -> bytes:
     out = subprocess.run(
-        ["security", "find-generic-password", "-w", "-s", f"{keyring_label} Safe Storage"],
+        [
+            "security",
+            "find-generic-password",
+            "-w",
+            "-s",
+            f"{keyring_label} Safe Storage",
+        ],
         capture_output=True,
         text=True,
         check=True,
+        timeout=10,
     )
     return _pbkdf2_aes_key(out.stdout.strip().encode(), iterations=1003)
 
 
-def _decrypt_chromium_value(encrypted_value: bytes | None, key: bytes | None) -> str:
+def _decrypt_chromium_value(
+    encrypted_value: bytes | None,
+    key: bytes | None,
+    domain: str,
+    version: int,
+) -> str:
     if not encrypted_value:
         return ""
     prefix = encrypted_value[:3]
     if prefix not in (b"v10", b"v11"):
-        # Unencrypted store: the plaintext lives in the `value` column already.
-        try:
-            return encrypted_value.decode("utf-8")
-        except UnicodeDecodeError:
-            return ""
+        return ""  # Unsupported encryption must never be treated as plaintext.
+    if sys.platform.startswith("linux") and prefix == b"v10":
+        key = _pbkdf2_aes_key(b"peanuts", iterations=1)
     if key is None:
         return ""
     body = encrypted_value[3:]
@@ -269,26 +367,102 @@ def _decrypt_chromium_value(encrypted_value: bytes | None, key: bytes | None) ->
 
             cipher = AES.new(key, AES.MODE_CBC, b" " * 16)
             padded = cipher.decrypt(body)
-            plain = padded[: -padded[-1]]  # strip PKCS#7 padding
-    except Exception as exc:  # noqa: BLE001
-        _debug(f"cookie decrypt failed: {exc}")
+            from Crypto.Util.Padding import unpad
+
+            plain = unpad(padded, 16)
+    except Exception:  # noqa: BLE001
+        _debug("cookie decrypt failed")
         return ""
-    # Chrome >=130 prepends a 32-byte SHA-256 domain hash to the plaintext.
+    if version >= 24:
+        expected = hashlib.sha256(domain.encode("utf-8")).digest()
+        if not hmac.compare_digest(plain[:32], expected):
+            _debug("Chromium cookie host binding mismatch")
+            return ""
+        plain = plain[32:]
     try:
         return plain.decode("utf-8")
     except UnicodeDecodeError:
-        return plain[32:].decode("utf-8", "ignore")
+        return ""
 
 
 def _windows_chromium_key() -> bytes:
-    raise RuntimeError("Windows cookie decryption is not implemented; pass cookies manually")
+    raise RuntimeError(
+        "Windows cookie decryption is not implemented; pass cookies manually"
+    )
+
+
+def _matches_domain(host: str, domain: str = "bilibili.com") -> bool:
+    host = host.lstrip(".")
+    return host == domain or host.endswith("." + domain)
+
+
+def _select_browser_cookies(cookies: list[Cookie]) -> dict[str, str]:
+    """Deduplicate within one browser, preferring shared root-domain cookies."""
+    best: dict[str, Cookie] = {}
+    now = int(time.time())
+
+    def rank(cookie: Cookie) -> tuple[bool, int]:
+        return cookie.domain.lstrip(".") == "bilibili.com", cookie.expires or 0
+
+    for cookie in cookies:
+        if not cookie.value or not _matches_domain(cookie.domain):
+            continue
+        if cookie.expires is not None and cookie.expires <= now:
+            continue
+        current = best.get(cookie.name)
+        if current is None or rank(cookie) > rank(current):
+            best[cookie.name] = cookie
+    return {name: cookie.value for name, cookie in best.items()}
+
+
+def _parse_login_status(body: object) -> bool:
+    if not isinstance(body, dict) or type(body.get("code")) is not int:
+        raise ValueError("Login API response is missing a numeric code")
+    if body["code"] == -101:
+        return False
+    if body["code"] != 0:
+        raise ValueError(
+            f"Login API returned code {body['code']} (not a confirmed logout)"
+        )
+    data = body.get("data")
+    if not isinstance(data, dict) or type(data.get("isLogin")) is not bool:
+        raise ValueError("Login API response is missing a boolean isLogin")
+    return data["isLogin"]
+
+
+def _validate_browser_login(cookies: dict[str, str]) -> bool:
+    from curl_cffi import requests
+
+    try:
+        response = requests.get(
+            "https://api.bilibili.com/x/web-interface/nav",
+            cookies=cookies,
+            headers={"Referer": "https://www.bilibili.com/"},
+            impersonate="chrome",
+            timeout=(5, 5),
+            allow_redirects=False,
+        )
+    except Exception:
+        raise RuntimeError(
+            "Login request failed (network/TLS/timeout, not a logout)"
+        ) from None
+    if response.status_code != 200:
+        raise RuntimeError(f"Login API returned HTTP {response.status_code}")
+    try:
+        body = response.json()
+    except Exception:
+        raise RuntimeError("Login API returned invalid JSON") from None
+    return _parse_login_status(body)
 
 
 def collect_browser_cookies(only: str | None = None) -> dict[str, str]:
-    """Return the freshest valid bilibili cookies found across browsers."""
-    best: dict[str, Cookie] = {}
-    now = int(time.time())
-    for browser in supported_browsers():
+    """Choose the first verified complete session; never combine browsers."""
+    browsers = supported_browsers()
+    if only and not any(browser.name == only for browser in browsers):
+        raise SystemExit(f"Unsupported browser: {only}")
+    validation_failed = False
+    read_failed = False
+    for browser in browsers:
         if only and browser.name != only:
             continue
         db_path = browser.existing_db()
@@ -300,17 +474,42 @@ def collect_browser_cookies(only: str | None = None) -> dict[str, str]:
                 found = _read_chromium(browser, db_path, "bilibili.com")
             else:
                 found = _read_firefox(db_path, "bilibili.com")
-        except Exception as exc:  # noqa: BLE001
-            _debug(f"  {browser.name} read failed: {exc}")
+        except Exception:  # noqa: BLE001
+            read_failed = True
+            print(
+                f"Could not read {browser.name} cookies; check browser/keyring access.",
+                file=sys.stderr,
+            )
             continue
-        for cookie in found:
-            if cookie.expires is not None and cookie.expires < now:
-                continue
-            current = best.get(cookie.name)
-            if current is None or (cookie.expires or 0) > (current.expires or 0):
-                best[cookie.name] = cookie
         _debug(f"  found {len(found)} cookie(s)")
-    return {name: c.value for name, c in best.items()}
+        selected = _select_browser_cookies(found)
+        if not selected.get("SESSDATA") or not selected.get("bili_jct"):
+            _debug(f"  {browser.name}: missing unexpired session or CSRF cookie")
+            continue
+        try:
+            valid = _validate_browser_login(selected)
+        except (RuntimeError, ValueError) as exc:
+            validation_failed = True
+            print(
+                f"Could not verify {browser.name} login: {exc}; trying next browser.",
+                file=sys.stderr,
+            )
+            continue
+        if valid:
+            print(f"Using verified Bilibili login from {browser.name}.")
+            return selected
+        _debug(f"  {browser.name}: Bilibili session is logged out")
+    if validation_failed:
+        raise SystemExit(
+            "No verified Bilibili session selected: login checks failed. Check network/API availability and retry."
+        )
+    if read_failed:
+        raise SystemExit(
+            "No verified Bilibili session selected: browser cookies could not be read. Check browser/keyring access and retry."
+        )
+    raise SystemExit(
+        "No logged-in Bilibili session found. Log into bilibili.com in a supported browser and retry."
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -424,8 +623,21 @@ def _extract_cover_frame(video: Path, dest: Path) -> Path:
     """Grab a frame from the video as a fallback cover when none is provided."""
     dest.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
-        ["ffmpeg", "-y", "-loglevel", "error", "-ss", "1", "-i", str(video),
-         "-frames:v", "1", "-q:v", "2", str(dest)],
+        [
+            "ffmpeg",
+            "-y",
+            "-loglevel",
+            "error",
+            "-ss",
+            "1",
+            "-i",
+            str(video),
+            "-frames:v",
+            "1",
+            "-q:v",
+            "2",
+            str(dest),
+        ],
         check=True,
     )
     return dest
@@ -434,13 +646,23 @@ def _extract_cover_frame(video: Path, dest: Path) -> Path:
 def build_plan(args: argparse.Namespace) -> UploadPlan:
     workspace = args.workspace.resolve() if args.workspace else None
 
-    video = args.video.resolve() if args.video else (workspace / "video.mp4" if workspace else None)
+    video = (
+        args.video.resolve()
+        if args.video
+        else (workspace / "video.mp4" if workspace else None)
+    )
     if not video or not video.is_file():
-        raise SystemExit("No video found. Pass --video or a --workspace containing video.mp4.")
+        raise SystemExit(
+            "No video found. Pass --video or a --workspace containing video.mp4."
+        )
 
     intro = _parse_intro(workspace / "intro.txt") if workspace else {}
 
-    title = args.title or intro.get("title") or (workspace.name if workspace else video.stem)
+    title = (
+        args.title
+        or intro.get("title")
+        or (workspace.name if workspace else video.stem)
+    )
     title = title[:BILI_TITLE_LIMIT]
 
     description = args.desc if args.desc is not None else _build_description(intro)
@@ -483,7 +705,9 @@ def build_plan(args: argparse.Namespace) -> UploadPlan:
 # --------------------------------------------------------------------------- #
 
 
-async def run_upload(plan: UploadPlan, creds: ResolvedCredentials, dry_run: bool) -> int:
+async def run_upload(
+    plan: UploadPlan, creds: ResolvedCredentials, dry_run: bool
+) -> int:
     from bilibili_api import Credential, video_uploader
 
     credential = Credential(
@@ -492,13 +716,6 @@ async def run_upload(plan: UploadPlan, creds: ResolvedCredentials, dry_run: bool
         buvid3=creds.buvid3 or None,
         dedeuserid=creds.dedeuserid or None,
     )
-
-    try:
-        valid = await credential.check_valid()
-    except Exception:  # noqa: BLE001 - older API versions, or offline
-        valid = None
-    if valid is False:
-        raise SystemExit("Credential rejected by bilibili (expired SESSDATA?). Re-log in.")
 
     meta = video_uploader.VideoMeta(
         tid=plan.tid,
@@ -515,7 +732,9 @@ async def run_upload(plan: UploadPlan, creds: ResolvedCredentials, dry_run: bool
 
     if dry_run:
         print("Dry run — nothing uploaded. Resolved plan:")
-        _print_plan(plan, valid)
+        _print_plan(
+            plan, True
+        )  # Browser selection already verified this exact session.
         return 0
 
     page = video_uploader.VideoUploaderPage(
@@ -580,21 +799,31 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         description="Upload a presentation video to Bilibili using your local browser login.",
     )
     parser.add_argument(
-        "--workspace", type=Path,
+        "--workspace",
+        type=Path,
         help="output/<slug> dir; auto-discovers video.mp4, thumbnail.png, intro.txt.",
     )
-    parser.add_argument("--video", type=Path, help="Video file (overrides workspace/video.mp4).")
-    parser.add_argument("--cover", type=Path, help="Cover image (overrides thumbnail.png).")
+    parser.add_argument(
+        "--video", type=Path, help="Video file (overrides workspace/video.mp4)."
+    )
+    parser.add_argument(
+        "--cover", type=Path, help="Cover image (overrides thumbnail.png)."
+    )
     parser.add_argument("--title", help="Video title (overrides intro.txt 中文标题).")
-    parser.add_argument("--desc", help="Description (overrides the one built from intro.txt).")
+    parser.add_argument(
+        "--desc", help="Description (overrides the one built from intro.txt)."
+    )
     parser.add_argument(
         "--tags",
         help="Comma-separated tags (1-10). Overrides the intro.txt 标签 line. "
         "Falls back to that line, then to: " + ",".join(DEFAULT_TAGS),
     )
-    parser.add_argument("--tid", type=int, default=DEFAULT_TID, help=f"Zone id. Default {DEFAULT_TID}.")
     parser.add_argument(
-        "--line", choices=["bda2", "qn", "ws", "bldsa"],
+        "--tid", type=int, default=DEFAULT_TID, help=f"Zone id. Default {DEFAULT_TID}."
+    )
+    parser.add_argument(
+        "--line",
+        choices=["bda2", "qn", "ws", "bldsa"],
         help="Upload line. Default: auto speed-test.",
     )
     parser.add_argument(
@@ -602,8 +831,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Limit the login lookup to one browser (chrome/firefox/edge/brave/...).",
     )
 
-    parser.add_argument("--dry-run", action="store_true", help="Resolve and validate without uploading.")
-    parser.add_argument("--debug", action="store_true", help="Verbose login-scan logging to stderr.")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Resolve and validate without uploading."
+    )
+    parser.add_argument(
+        "--debug", action="store_true", help="Verbose login-scan logging to stderr."
+    )
     return parser.parse_args(argv)
 
 
